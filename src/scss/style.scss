@@ -539,11 +539,11 @@ nav {
   display: inline-block;
   &:hover {
     .dropdown-content {
-      //display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
       &:hover {
         opacity: 1 !important;
         visibility: visible !important;
-        //display: block !important;
       }
     }
   }
