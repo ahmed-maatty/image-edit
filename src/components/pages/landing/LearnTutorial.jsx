@@ -7,19 +7,19 @@ function LearnTutorial() {
   return (
     <>
       <img
-        src="/public/media/imgs/Ellipse 4.png"
+        src="/media/imgs/Ellipse 4.png"
         alt=""
         className="ellipse1"
         style={{ opacity: 1 }}
       />
       <img
-        src="/public/media/imgs/Ellipse 4.png"
+        src="/media/imgs/Ellipse 4.png"
         alt=""
         className="ellipse2"
         style={{ opacity: 1 }}
       />
       <img
-        src="/public/media/imgs/Ellipse 4.png"
+        src="/media/imgs/Ellipse 4.png"
         alt=""
         className="ellipse3"
         style={{ opacity: 1 }}
@@ -50,7 +50,7 @@ function LearnTutorial() {
             alt=""
           />
         </div>
-        <img className="bg" src="/public/media/imgs/Hero.png" alt="" />
+        <img className="bg" src="/media/imgs/Hero.png" alt="" />
       </div>
       <section className="LearnTutorial">
         <div className="box">

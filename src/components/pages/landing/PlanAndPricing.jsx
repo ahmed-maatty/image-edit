@@ -7,9 +7,9 @@ function PlanAndPricing() {
   CustomFooter("Plan_Pricing");
   return (
     <>
-      <img src="/public/media/imgs/Ellipse 4.png" alt="" className="ellipse1" />
-      <img src="/public/media/imgs/Ellipse 4.png" alt="" className="ellipse2" />
-      <img src="/public/media/imgs/Ellipse 4.png" alt="" className="ellipse3" />
+      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse1" />
+      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse2" />
+      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse3" />
       <section className="Plan_Pricing_Section">
         <div className="box">
           <header>

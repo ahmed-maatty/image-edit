@@ -8,9 +8,9 @@ function Learn() {
   CustomFooter("Learn");
   return (
     <>
-      <img src="/public/media/imgs/Ellipse 4.png" alt="" className="ellipse1" style={{opacity : 1}} />
-      <img src="/public/media/imgs/Ellipse 4.png" alt="" className="ellipse2" style={{opacity : 1}}/>
-      <img src="/public/media/imgs/Ellipse 4.png" alt="" className="ellipse3" style={{opacity : 1}}/>
+      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse1" style={{opacity : 1}} />
+      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse2" style={{opacity : 1}}/>
+      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse3" style={{opacity : 1}}/>
       <section className="Learn_Section">
         <div className="box">
           <header>

@@ -1,6 +1,6 @@
 [
   {
-    "image": "/public/media/Learn/learn_card.jpg",
+    "image": "/media/Learn/learn_card.jpg",
     "title": "Main title of the article based on two rows or three rows on How to make a design",
     "steps": [
       { "key": "Step 1:", "value": "Open kitaba" },
@@ -19,7 +19,7 @@
     ]
   },
   {
-    "image": "/public/media/Learn/learn_card.jpg",
+    "image": "/media/Learn/learn_card.jpg",
     "title": "Main title of the article based on two rows or three rows on How to make a design",
     "steps": [
       { "key": "Step 1:", "value": "Open kitaba" },
@@ -38,7 +38,7 @@
     ]
   },
   {
-    "image": "/public/media/Learn/learn_card.jpg",
+    "image": "/media/Learn/learn_card.jpg",
     "title": "Main title of the article based on two rows or three rows on How to make a design",
     "steps": [
       { "key": "Step 1:", "value": "Open kitaba" },

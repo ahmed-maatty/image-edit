@@ -7,37 +7,37 @@
     "buttonText": "Register now",
     "features": [
       {
-        "Img": "../../public/media/pricing/mingcute_content-ai-line.png",
+        "Img": "/media/pricing/mingcute_content-ai-line.png",
         "text": "Easy to use photo editor",
         "beta": false
       },
       {
-        "Img": "../../public/media/pricing/material-symbols_image-outline-rounded.png",
+        "Img": "/media/pricing/material-symbols_image-outline-rounded.png",
         "text": "Hundred of fonts to choose from",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Thousands of backgrounds for every need",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Design social media templates, printing materials & more",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Create image using AI not available",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Remove background using AI not available",
         "beta": false
       },
       {
-        "Img": "../../public/media/pricing/ph_resize-bold.png",
+        "Img": "/media/pricing/ph_resize-bold.png",
         "text": "Unlimited projects use",
         "beta": false
       }
@@ -51,47 +51,47 @@
     "buttonText": "Upgrade",
     "features": [
       {
-        "Img": "../../public/media/pricing/mingcute_content-ai-line.png",
+        "Img": "/media/pricing/mingcute_content-ai-line.png",
         "text": "Easy to use photo editor",
         "beta": false
       },
       {
-        "Img": "../../public/media/pricing/material-symbols_image-outline-rounded.png",
+        "Img": "/media/pricing/material-symbols_image-outline-rounded.png",
         "text": "Unlimited access to all fonts available",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Unlimited access to all design templates",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Unlimited projects use",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Unlimited templates to suit every need",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Create image using AI in just one click",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Resize image using AI",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Remove background instantly",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Short term plan renewed monthly",
         "beta": false
       }
@@ -105,57 +105,57 @@
     "buttonText": "Upgrade",
     "features": [
       {
-        "Img": "../../public/media/pricing/mingcute_content-ai-line.png",
+        "Img": "/media/pricing/mingcute_content-ai-line.png",
         "text": "Easy to use photo editor",
         "beta": false
       },
       {
-        "Img": "../../public/media/pricing/material-symbols_image-outline-rounded.png",
+        "Img": "/media/pricing/material-symbols_image-outline-rounded.png",
         "text": "Unlimited access to all fonts available",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Unlimited access to all design templates",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Unlimited projects use",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Unlimited templates to suit every need",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Create image using AI in just one click",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Resize image using AI",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Remove background instantly",
         "beta": true
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Long term plan",
         "beta": false
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "One time payment per year",
         "beta": false
       },
       {
-        "Img": "../../public/media/pricing/mynaui_image.png",
+        "Img": "/media/pricing/mynaui_image.png",
         "text": "Renewed yearly",
         "beta": false
       }

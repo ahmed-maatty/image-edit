@@ -15,16 +15,16 @@ function Categories() {
 
   const foldersImgs = [
     "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
-    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/2.jpg",
+    "/media/category_pop_up/3.jpg",
+    "/media/category_pop_up/4.jpg",
+    "/media/category_pop_up/5.jpg",
+    "/media/category_pop_up/6.jpg",
+    "/media/category_pop_up/7.jpg",
+    "/media/category_pop_up/8.jpg",
+    "/media/category_pop_up/9.jpg",
+    "/media/category_pop_up/10.jpg",
+    "/media/category_pop_up/11.jpg",
   ];
 
   const columns = 3;

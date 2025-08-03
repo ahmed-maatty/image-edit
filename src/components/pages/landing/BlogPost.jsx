@@ -4,19 +4,19 @@ function BlogPost() {
   return (
     <>
       <img
-        src="/public/media/imgs/Ellipse 4.png"
+        src="/media/imgs/Ellipse 4.png"
         alt=""
         className="ellipse1"
         style={{ opacity: 1 }}
       />
       <img
-        src="/public/media/imgs/Ellipse 4.png"
+        src="/media/imgs/Ellipse 4.png"
         alt=""
         className="ellipse2"
         style={{ opacity: 1 }}
       />
       <img
-        src="/public/media/imgs/Ellipse 4.png"
+        src="/media/imgs/Ellipse 4.png"
         alt=""
         className="ellipse3"
         style={{ opacity: 1 }}
@@ -34,7 +34,7 @@ function BlogPost() {
 
           <img
             className="heroImg blog_post_img"
-            src="/public/media/Learn/learn.jpg"
+            src="/media/Learn/learn.jpg"
             alt=""
           />
         </div>
