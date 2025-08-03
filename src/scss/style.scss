@@ -3887,8 +3887,10 @@ body.Plan_Pricing {
         .plan_main_price {
           background: linear-gradient(
             87.95deg,
-            #090edb -15.78%,
-            #e73dc4 102.06%
+            #090edb 0%,
+            #e73dc4 8.06%,
+            #090edb 12%,
+            #e73dc4 45.5%
           );
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
