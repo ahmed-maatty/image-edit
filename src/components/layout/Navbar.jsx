@@ -103,7 +103,7 @@ function Navbar() {
                 <img src="/media/icons/material-symbols_close.png" alt="" />
               </button>
               {renderAuthForm()}
-              <img className="authImg" src="/media/auth.jpg" alt="" />
+              <img className="authImg" src="/media/auth.png" alt="" />
             </div>
           </div>
         </div>
