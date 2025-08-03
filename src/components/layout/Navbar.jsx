@@ -142,7 +142,7 @@ function Navbar() {
                     className="Laerndropdown"
                     onMouseEnter={() => setOpen(true)}
                   >
-                    <Link to="/learn" className={`link ${isActive("learn")}`} onMouseEnter={() => setOpen(true)}>
+                    <Link className={`link ${isActive("learn")}`} onMouseEnter={() => setOpen(true)}>
                       Learn
                     </Link>
 

@@ -3837,14 +3837,16 @@ body.Plan_Pricing {
       padding-top: 200px;
       margin-bottom: 40px;
       .box-content {
+        h1 {
+          opacity: 0.8;
+        }
+        h2 {
+          opacity: 0.6;
+        }
         h1,
         h2 {
           text-align: center;
-          background: linear-gradient(
-            87.95deg,
-            #090edb -15.78%,
-            #e73dc4 102.06%
-          );
+          background: linear-gradient(88deg, #090edb 14.78%, #e73dc4 62.06%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
