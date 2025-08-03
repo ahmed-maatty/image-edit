@@ -38,7 +38,7 @@ function BlogPost() {
             alt=""
           />
         </div>
-        <img className="bg" src="/public/media/imgs/Hero.png" alt="" />
+        <img className="bg" src="/media/imgs/Hero.png" alt="" />
       </div>
       <section className="blog_post_section">
         <div className="box">
