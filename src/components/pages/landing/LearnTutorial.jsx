@@ -46,7 +46,7 @@ function LearnTutorial() {
 
           <img
             className="heroImg heroLearnImg"
-            src="/public/media/imgs/Group.png"
+            src="/media/imgs/Group.png"
             alt=""
           />
         </div>
