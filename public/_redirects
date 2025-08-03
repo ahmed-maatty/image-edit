@@ -1,0 +1,3 @@
+/api/*  https://kitaba.kaaf.me/api/:splat  200
+/bg/*   https://3rabapp.com/apps/:splat               200
+/*      /index.html                                   200

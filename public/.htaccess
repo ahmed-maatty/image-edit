@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Proxy /api/* to admin.sigmaagencyjo.com/api/v1/*
+    RewriteRule ^api/(.*)$ https://kitaba.kaaf.me/api/$1 [P,L]
+    
+    # Proxy /bg/* to 3rabapp.com/apps/*
+    RewriteRule ^bg/(.*)$ https://3rabapp.com/apps/$1 [P,L]
+    
+    # SPA Fallback: Redirect all other requests to index.html
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /index.html [L]
+</IfModule>

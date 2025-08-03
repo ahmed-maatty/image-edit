@@ -1,0 +1,49 @@
+{
+  "blogPage": [
+    {
+      "id": 1,
+      "title": "Main title of the article based on two rows or three rows",
+      "image": "../../public/media/Learn/learn_card.jpg"
+    },
+    {
+      "id": 2,
+      "title": "Main title of the article based on two rows or three rows",
+      "image": "../../public/media/Learn/learn_card.jpg"
+    },
+    {
+      "id": 3,
+      "title": "Main title of the article based on two rows or three rows",
+      "image": "../../public/media/Learn/learn_card.jpg"
+    },
+    {
+      "id": 4,
+      "title": "Main title of the article based on two rows or three rows",
+      "image": "../../public/media/Learn/learn_card.jpg"
+    },
+    {
+      "id": 5,
+      "title": "Main title of the article based on two rows or three rows",
+      "image": "../../public/media/Learn/learn_card.jpg"
+    },
+    {
+      "id": 6,
+      "title": "Main title of the article based on two rows or three rows",
+      "image": "../../public/media/Learn/learn_card.jpg"
+    },
+    {
+      "id": 7,
+      "title": "Main title of the article based on two rows or three rows",
+      "image": "../../public/media/Learn/learn_card.jpg"
+    },
+    {
+      "id": 8,
+      "title": "Main title of the article based on two rows or three rows",
+      "image": "../../public/media/Learn/learn_card.jpg"
+    },
+    {
+      "id": 9,
+      "title": "Main title of the article based on two rows or three rows",
+      "image": "../../public/media/Learn/learn_card.jpg"
+    }
+  ]
+}

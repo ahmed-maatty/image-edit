@@ -1,0 +1,59 @@
+[
+  {
+    "image": "/public/media/Learn/learn_card.jpg",
+    "title": "Main title of the article based on two rows or three rows on How to make a design",
+    "steps": [
+      { "key": "Step 1:", "value": "Open kitaba" },
+      {
+        "key": "Step 2:",
+        "value": "Step name continuing when user reaches it"
+      },
+      {
+        "key": "Step 2:",
+        "value": "Step name continuing when user reaches it"
+      },
+      {
+        "key": "Step 2:",
+        "value": "Step name continuing when user reaches it"
+      }
+    ]
+  },
+  {
+    "image": "/public/media/Learn/learn_card.jpg",
+    "title": "Main title of the article based on two rows or three rows on How to make a design",
+    "steps": [
+      { "key": "Step 1:", "value": "Open kitaba" },
+      {
+        "key": "Step 2:",
+        "value": "Step name continuing when user reaches it"
+      },
+      {
+        "key": "Step 2:",
+        "value": "Step name continuing when user reaches it"
+      },
+      {
+        "key": "Step 2:",
+        "value": "Step name continuing when user reaches it"
+      }
+    ]
+  },
+  {
+    "image": "/public/media/Learn/learn_card.jpg",
+    "title": "Main title of the article based on two rows or three rows on How to make a design",
+    "steps": [
+      { "key": "Step 1:", "value": "Open kitaba" },
+      {
+        "key": "Step 2:",
+        "value": "Step name continuing when user reaches it"
+      },
+      {
+        "key": "Step 2:",
+        "value": "Step name continuing when user reaches it"
+      },
+      {
+        "key": "Step 2:",
+        "value": "Step name continuing when user reaches it"
+      }
+    ]
+  }
+]
