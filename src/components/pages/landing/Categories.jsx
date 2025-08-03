@@ -9,22 +9,22 @@ function Categories() {
   const popUpToggle = () => activePopUp((prev) => !prev);
 
   const foldersData = {
-    img: "../../../../public/dofi.jpg",
+    img: "/dofi.jpg",
     folderName: "Folder name here",
   };
 
   const foldersImgs = [
-    "../../../../public/media/category_pop_up/1.jpg",
-    "../../../../public/media/category_pop_up/2.jpg",
-    "../../../../public/media/category_pop_up/3.jpg",
-    "../../../../public/media/category_pop_up/4.jpg",
-    "../../../../public/media/category_pop_up/5.jpg",
-    "../../../../public/media/category_pop_up/6.jpg",
-    "../../../../public/media/category_pop_up/7.jpg",
-    "../../../../public/media/category_pop_up/8.jpg",
-    "../../../../public/media/category_pop_up/9.jpg",
-    "../../../../public/media/category_pop_up/10.jpg",
-    "../../../../public/media/category_pop_up/11.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
+    "/media/category_pop_up/1.jpg",
   ];
 
   const columns = 3;
@@ -36,9 +36,9 @@ function Categories() {
 
   return (
     <>
-      <img src="/public/media/imgs/Ellipse 4.png" alt="" className="ellipse1" />
-      <img src="/public/media/imgs/Ellipse 4.png" alt="" className="ellipse2" />
-      <img src="/public/media/imgs/Ellipse 4.png" alt="" className="ellipse3" />
+      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse1" />
+      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse2" />
+      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse3" />
       <section className="Category">
         <div className="box">
           <header>
