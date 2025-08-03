@@ -242,6 +242,7 @@ select {
     opacity: 1;
   }
 }
+
 .opacity {
   opacity: 0;
 }
@@ -536,6 +537,16 @@ nav {
 .Laerndropdown {
   position: relative;
   display: inline-block;
+  &:hover {
+    .dropdown-content {
+      //display: block !important;
+      &:hover {
+        opacity: 1 !important;
+        visibility: visible !important;
+        //display: block !important;
+      }
+    }
+  }
   .link {
     border-radius: 20px;
     text-decoration: none;
@@ -558,6 +569,10 @@ nav {
     min-width: 160px;
     overflow: hidden;
     z-index: 100;
+    opacity: 0;
+    visibility: none;
+    display: block;
+    transition: opacity 0.5s ease !important;
   }
 
   .dropdown-content a {
@@ -3743,7 +3758,8 @@ body.category_body {
       z-index: 999;
       max-width: 80%;
       width: 100%;
-      height: 530px;
+      margin-top: 45px;
+      height: 80%;
       overflow-y: scroll;
       &::-webkit-scrollbar {
         width: 5px;
@@ -4267,28 +4283,28 @@ body.Learn {
     display: none;
   }
   .Learn_Section header .headerImg {
-    .card{
+    .card {
       display: none;
     }
     img {
       width: 100%;
     }
   }
-  .heroLearnImg{
+  .heroLearnImg {
     display: none;
   }
-  .LearnTutorial .tutorial_Content_Container{
+  .LearnTutorial .tutorial_Content_Container {
     padding: 25px 16px;
-    .tutorial_Content{
+    .tutorial_Content {
       flex-direction: column;
       .steps {
         flex-direction: column;
         align-items: start !important;
         margin-bottom: 1.5rem !important;
-        .p-key{
+        .p-key {
           font-size: 15px;
         }
-        .p-values{
+        .p-values {
           font-size: 18px !important;
         }
       }

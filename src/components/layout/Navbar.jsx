@@ -141,14 +141,16 @@ function Navbar() {
                   <div
                     className="Laerndropdown"
                     onMouseEnter={() => setOpen(true)}
-                    onMouseLeave={() => setOpen(false)}
                   >
                     <Link to="/learn" className={`link ${isActive("learn")}`}>
                       Learn
                     </Link>
 
                     {open && (
-                      <div className="dropdown-content">
+                      <div
+                        className="dropdown-content"
+                        onMouseLeave={() => setOpen(false)}
+                      >
                         <Link to="/learn">Kitaba Blog</Link>
                         <Link to="/learn/tutorial">Kitaba Tutorial</Link>
                       </div>

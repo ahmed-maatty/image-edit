@@ -528,6 +528,14 @@ nav {
   position: relative;
   display: inline-block;
 }
+.Laerndropdown:hover .dropdown-content {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.Laerndropdown:hover .dropdown-content:hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
 .Laerndropdown .link {
   border-radius: 20px;
   text-decoration: none;
@@ -549,6 +557,10 @@ nav {
   min-width: 160px;
   overflow: hidden;
   z-index: 100;
+  opacity: 0;
+  visibility: none;
+  display: block;
+  transition: opacity 0.5s ease !important;
 }
 .Laerndropdown .dropdown-content a {
   display: block;
@@ -3829,7 +3841,8 @@ body.category_body footer {
   z-index: 999;
   max-width: 80%;
   width: 100%;
-  height: 530px;
+  margin-top: 45px;
+  height: 80%;
   overflow-y: scroll;
 }
 .Category .popUp_Container .pop_up::-webkit-scrollbar {
