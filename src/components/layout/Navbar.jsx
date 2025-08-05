@@ -175,7 +175,7 @@ function Navbar() {
               </button>
               <button
                 onClick={() => {
-                  handleShow("signup");
+                  handleShow("options");
                 }}
                 className="yellowBtn"
               >
