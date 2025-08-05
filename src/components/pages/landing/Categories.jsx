@@ -156,7 +156,7 @@ function Categories() {
                 ))}
               </div>
             </div>
-            <div className="layer"></div>
+            <div className="layer" onClick={() => popUpToggle()}></div>
           </div>
         )}
       </section>
