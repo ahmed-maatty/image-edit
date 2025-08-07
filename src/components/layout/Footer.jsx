@@ -53,7 +53,7 @@ function Footer() {
               className="btn"
               onClick={() => {
                 setShow(true);
-                setOption("signup");
+                setOption("options");
               }}
             >
               Start design

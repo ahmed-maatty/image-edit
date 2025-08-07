@@ -2,9 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { CustomFooter } from "../../../hooks/CustomFooter";
 import pricesData from "../../../json/prices.json";
+import { useShowOption } from "../../../hooks/ShowOptionProvider";
 
 function PlanAndPricing() {
   CustomFooter("Plan_Pricing");
+  const { setShow, setOption } = useShowOption();
   return (
     <>
       <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse1" />
@@ -24,19 +26,26 @@ function PlanAndPricing() {
                 <h1 className="plan_price">{data.plan}</h1>
                 <p className="plan_description">{data.description}</p>
                 <h1 className="plan_main_price">{data.price}</h1>
-                <button className="plan_btn">{data.buttonText}</button>
+                {data.buttonText === "Register now" ? (
+                  <button 
+                  className="plan_btn"
+                  onClick={() => {
+                    setShow(true)
+                    setOption("options")
+                  }}
+                  >{data.buttonText}</button>
+                ) : (
+                  <button className="plan_btn">{data.buttonText}</button>
+                )}
+
                 <div className="plan_Features">
-                  {
-                    data.features.map((feature,index)=>(
-                      <span key={index}>
-                        <img src={feature.Img} alt="" />
-                        <p>{feature.text}</p>
-                        {
-                          feature.beta && <p className="beta"> Beta </p>
-                        }
-                      </span>
-                    ))
-                  }
+                  {data.features.map((feature, index) => (
+                    <span key={index}>
+                      <img src={feature.Img} alt="" />
+                      <p>{feature.text}</p>
+                      {feature.beta && <p className="beta"> Beta </p>}
+                    </span>
+                  ))}
                 </div>
               </div>
             ))}

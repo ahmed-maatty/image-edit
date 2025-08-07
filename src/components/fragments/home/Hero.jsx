@@ -13,7 +13,7 @@ function Hero() {
             className="btn btn2"
             onClick={() => {
               setShow(true);
-              setOption("signup");
+              setOption("options");
             }}
           >
             Start design

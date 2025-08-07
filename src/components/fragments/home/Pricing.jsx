@@ -44,7 +44,7 @@ function Pricing() {
               <button
                 onClick={() => {
                   setShow(true);
-                  setOption("signup");
+                  setOption("options");
                 }}
                 className="btn w100"
               >
