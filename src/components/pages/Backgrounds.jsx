@@ -140,7 +140,15 @@ function Backgrounds() {
                 </div>
                 <div className="bgbox">
                   {[...Array(category.count)].map((_, index) => (
-                    <button className="bg" key={index}>
+                    <button
+                      className="bg"
+                      key={index}
+                      onClick={() => {
+                        const imgUrl = `http://3rabapp.com/apps/assets/bg-thnumbail/cat${category.index}-${index}.png`;
+                        sessionStorage.setItem("imgUrl", imgUrl);
+                        navigate("/editor");
+                      }}
+                    >
                       <img
                         src={`http://3rabapp.com/apps/assets/bg-thnumbail/cat${category.index}-${index}.png`}
                         alt={`Thumbnail ${index}`}

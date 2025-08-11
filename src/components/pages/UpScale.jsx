@@ -3,6 +3,7 @@ import { useDashboardNav } from "../../hooks/DashboardNavHook";
 import { DashboardNav } from "../fragments/dashboard/DashboardNav";
 import AlsoLinks from "../fragments/ai/AlsoLinks";
 import { useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 const styles = [
   { en: "Standard", ar: "عادي", value: "standard" },
@@ -42,8 +43,16 @@ function UpScale() {
     setTextInput("");
   };
 
-  const handleDownload = (event) => {
-    const url = event.target.src;
+  const [showShareImage, setShowShareImage] = useState(false);
+
+  const copylinkHandler = (url) => {
+    navigator.clipboard
+      .writeText(url)
+      .then(() => toast.success("Copied To The Clipord"))
+      .catch(() => toast.error("error accured!"));
+  };
+
+  const handleDownload = (url) => {
     const filename = url.split("/").pop();
     const a = document.createElement("a");
     a.href = url;
@@ -171,6 +180,61 @@ function UpScale() {
                         ))}
                       </div>
                     )}
+                  </div>
+                  <div className="save-share-btns">
+                    <div className="save-btn-container">
+                      <button
+                        className="save-btn"
+                        onClick={() => {
+                          handleDownload(uploadedImage);
+                        }}
+                      >
+                        <img src="/media/saveIcon.png" alt="" />
+                        Save to a project
+                      </button>
+                    </div>
+                    <div>
+                      <button
+                        className="share-btn"
+                        onClick={() => setShowShareImage(true)}
+                      >
+                        <img src="/media/uil_export.png" alt="" />
+                        Share image
+                      </button>
+                      {showShareImage && (
+                        <div className="save-drop-down share-image-download">
+                          <div className="recent-project-close">
+                            <p>Share image</p>
+                            <button onClick={() => setShowShareImage(false)}>
+                              <img src="/media/closeSign.png" alt="" />
+                            </button>
+                          </div>
+                          <div className="share-download-btn">
+                            <button
+                              onClick={() => handleDownload(uploadedImage)}
+                            >
+                              <img src="/media/download-Image.png" alt="" />
+                              <p>Download image</p>
+                            </button>
+                            <button
+                              onClick={() => copylinkHandler(uploadedImage)}
+                            >
+                              <img src="/media/linkImage.png" alt="" />
+                              <p>Copy link</p>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ marginTop: "16px" }}>
+                      <button
+                        className="share-btn"
+                        onClick={() => inputRef.current.click()}
+                      >
+                        <img src="/media/uil_export.png" alt="" />
+                        Upload another one
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

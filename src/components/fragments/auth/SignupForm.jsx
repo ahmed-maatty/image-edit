@@ -6,6 +6,7 @@ import { Eye, EyeSlash, Arrow, Info } from "./icons/AuthIcons";
 import { useState } from "react";
 
 function SignupForm({ setOption, setShow }) {
+
   const validation = Yup.object().shape({
     email: Yup.string()
       .email("Invalid email address")
@@ -59,7 +60,7 @@ function SignupForm({ setOption, setShow }) {
             password_confirmation: "",
           }}
           onSubmit={(values, { resetForm }) => {
-            handleSubmit(values, resetForm, "signup", setShow);
+            handleSubmit(values, resetForm, "register", setShow);
           }}
           validationSchema={validation}
         >

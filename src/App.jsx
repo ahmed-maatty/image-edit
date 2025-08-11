@@ -18,6 +18,7 @@ import PlanAndPricing from "./components/pages/landing/PlanAndPricing";
 import Learn from "./components/pages/landing/Learn";
 import LearnTutorial from "./components/pages/landing/LearnTutorial";
 import BlogPost from "./components/pages/landing/BlogPost";
+import BgRemover from "./components/pages/BgRemover";
 
 function App() {
   return (
@@ -43,6 +44,10 @@ function App() {
           <Route
             path="/editor"
             element={<ProtectedRoute component={Editor} />}
+          />
+          <Route
+            path="/bg-remover"
+            element={<ProtectedRoute component={BgRemover} />}
           />
           <Route
             path="/ai-tools"

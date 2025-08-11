@@ -45,7 +45,9 @@ function Editor() {
   const [canvas, setCanvas] = useState(null);
   const [activeTool, setActiveTool] = useState(null);
   const [filterValue, setFilterValue] = useState(50);
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState(
+    sessionStorage.getItem("imgUrl") || null
+  );
   const [showLayersPanel, setShowLayersPanel] = useState(false);
   const [layers, setLayers] = useState([]);
   const fileInputRef = useRef(null);
