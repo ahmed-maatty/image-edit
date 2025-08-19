@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation,matchPath } from "react-router-dom";
 import { useShowOption } from "../../hooks/ShowOptionProvider";
 import { AxiosInstance } from "../../api/axios";
 import { handleError } from "../../api/error";
@@ -25,13 +25,14 @@ function Footer() {
     "/",
     "/categories",
     "/pricing",
-    "/learn",
+    "/blogs",
     "/learn/tutorial",
-    "/blogpost"
+    "/blog/:slug",
   ];
-  if (!allowedPaths.includes(pathname)) {
-    return null;
-  }
+  const isAllowed = allowedPaths.some((path) => matchPath({ path, end: true }, pathname));
+  if (!isAllowed) {
+  return null;
+}
   const isActive = (path) => {
     if (path === "/") {
       return pathname === path ? "active" : "";
@@ -117,7 +118,7 @@ function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to={`/learn`} className={`${isActive("learn")}`}>
+                <Link to={`/blogs`} className={`${isActive("learn")}`}>
                   Learn
                 </Link>
               </li>

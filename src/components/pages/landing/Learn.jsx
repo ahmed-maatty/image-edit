@@ -1,16 +1,47 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { CustomFooter } from "../../../hooks/CustomFooter";
 import learnHeaderMainPage from "../../../../public/media/Learn/learn.jpg";
-import { blogPage } from "../../../json/learn.json";
+//import { blogPage } from "../../../json/learn.json";
 import { Link } from "react-router-dom";
+import { AxiosInstance } from "../../../api/axios";
+import { handleError } from "../../../api/error";
 
 function Learn() {
+  const [blogPage, setBlogPage] = useState([]);
+
+  useEffect(() => {
+    const fetchBlog = async () => {
+      try {
+        const res = await AxiosInstance.get("/blogs");
+        setBlogPage(res?.data?.data);
+      } catch (error) {
+        handleError(error);
+      }
+    };
+    fetchBlog();
+  }, []);
   CustomFooter("Learn");
+
   return (
     <>
-      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse1" style={{opacity : 1}} />
-      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse2" style={{opacity : 1}}/>
-      <img src="/media/imgs/Ellipse 4.png" alt="" className="ellipse3" style={{opacity : 1}}/>
+      <img
+        src="/media/imgs/Ellipse 4.png"
+        alt=""
+        className="ellipse1"
+        style={{ opacity: 1 }}
+      />
+      <img
+        src="/media/imgs/Ellipse 4.png"
+        alt=""
+        className="ellipse2"
+        style={{ opacity: 1 }}
+      />
+      <img
+        src="/media/imgs/Ellipse 4.png"
+        alt=""
+        className="ellipse3"
+        style={{ opacity: 1 }}
+      />
       <section className="Learn_Section">
         <div className="box">
           <header>
@@ -27,7 +58,7 @@ function Learn() {
           </header>
           <div className="learn_cards">
             {blogPage.map((article, index) => (
-              <Link to={"/blogpost"} className="card" key={index}>
+              <Link to={`/blog/${article.slug}`} className="card" key={index}>
                 <div className="card_img">
                   <img src={article.image} alt="" />
                 </div>

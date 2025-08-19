@@ -4148,14 +4148,18 @@ body.Learn {
 }
 
 .blog_post_hero_bx {
+  width: 100%;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   .learnTutorial {
-    width: 340px !important;
+    width: 450px !important;
   }
   .blog_post_title {
     color: #2d3748 !important;
     font-size: 36px !important;
     font-weight: 500;
-    width: 340px !important;
+    width: 560px !important;
     word-spacing: 5px !important;
   }
 }
@@ -4192,7 +4196,7 @@ body.Learn {
 .ellipse2 {
   position: absolute;
   left: 0;
-  top: 42%;
+  top: 38%;
   opacity: 0.3;
   z-index: 1;
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useEffect, useRef } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams ,matchPath} from "react-router-dom";
 import LoginForm from "../fragments/auth/LoginForm";
 import SignupForm from "../fragments/auth/SignupForm";
 import AuthOptions from "../fragments/auth/AuthOptions";
@@ -81,13 +81,15 @@ function Navbar() {
     "/",
     "/categories",
     "/pricing",
-    "/learn",
+    "/blogs",
     "/learn/tutorial",
-    "/blogpost",
+    "/blog/:slug",
   ];
-  if (!allowedPaths.includes(pathname)) {
-    return null;
-  }
+  const isAllowed = allowedPaths.some((path) => matchPath({ path, end: true }, pathname));
+
+if (!isAllowed) {
+  return null;
+}
   return (
     <>
       {show && (
@@ -151,7 +153,7 @@ function Navbar() {
                         className="dropdown-content"
                         onMouseLeave={() => setOpen(false)}
                       >
-                        <Link to="/learn">Kitaba Blog</Link>
+                        <Link to="/blogs">Kitaba Blog</Link>
                         <Link to="/learn/tutorial">Kitaba Tutorial</Link>
                       </div>
                     )}
