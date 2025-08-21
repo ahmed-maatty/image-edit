@@ -10,7 +10,6 @@ export const useAuthHandlers = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (values, resetForm, route, setShow, goTo) => {
-    console.log("going to => " , goTo)
     setIsLoading(true);
     try {
       const res = await AxiosInstance.post(route, values);

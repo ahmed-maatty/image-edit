@@ -46,11 +46,7 @@ function BlogPost() {
               <p className="learnTutorial">{blog?.meta_description}</p>
             </div>
             <div>
-              <img
-                className="heroImg blog_post_img"
-                src={blog?.image}
-                alt=""
-              />
+              <img className="heroImg blog_post_img" src={blog?.image} alt="" />
             </div>
           </div>
         </div>
@@ -59,9 +55,10 @@ function BlogPost() {
       <section className="blog_post_section">
         <div className="box">
           <div className="blog_post_container">
-            <p className="blog_post_text">
-             {blog?.body}
-            </p>
+            <p
+              className="blog_post_text"
+              dangerouslySetInnerHTML={{ __html: blog?.body }}
+            ></p>
           </div>
         </div>
       </section>

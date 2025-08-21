@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
@@ -18,13 +19,34 @@ function AuthOptions({ setOption }) {
     if (window.google) {
       tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id:
-          "505144242697-jdbtuigd972ou91rio07k4hilqdgj28v.apps.googleusercontent.com",
+          "493420191440-elm44i8nn0vieu4nkrabe9o98folk1nv.apps.googleusercontent.com",
         scope:
           "openid profile email https://www.googleapis.com/auth/userinfo.email",
         callback: async (tokenResponse) => {
           const accessToken = tokenResponse.access_token;
+          console.log(accessToken);
           if (accessToken) {
-            await handleSocialLogin(accessToken, "google");
+            const userInfo = await fetch(
+              "https://www.googleapis.com/oauth2/v3/userinfo",
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                },
+              }
+            ).then((res) => res.json());
+
+            console.log("Google User Info:", userInfo);
+
+            await handleSocialLogin(
+              {
+                username: userInfo.name,
+                token: `Bearer ${accessToken}`,
+                social_media_site: "google",
+                email: userInfo.email,
+                is_social: "true",
+              },
+              "google"
+            );
           }
         },
       });
@@ -33,26 +55,28 @@ function AuthOptions({ setOption }) {
 
   useEffect(() => {
     if (!window.fbAsyncInit) {
-      window.fbAsyncInit = function() {
+      window.fbAsyncInit = function () {
         window.FB.init({
-          appId: '1460753841607323',
+          appId: "1234020597087735",
           cookie: true,
           xfbml: true,
-          version: 'v19.0', // Must be a valid version string
-          autoLogAppEvents: true
+          version: "v19.0", // Must be a valid version string
+          autoLogAppEvents: true,
         });
-        console.log('Facebook SDK initialized');
+        console.log("Facebook SDK initialized");
       };
 
       // Load SDK Asynchronously
-      (function(d, s, id){
-        var js, fjs = d.getElementsByTagName(s)[0];
+      (function (d, s, id) {
+        var js,
+          fjs = d.getElementsByTagName(s)[0];
         if (d.getElementById(id)) return;
-        js = d.createElement(s); js.id = id;
+        js = d.createElement(s);
+        js.id = id;
         js.src = "https://connect.facebook.net/en_US/sdk.js";
-        js.onerror = () => console.error('Failed to load Facebook SDK');
+        js.onerror = () => console.error("Failed to load Facebook SDK");
         fjs.parentNode.insertBefore(js, fjs);
-      }(document, 'script', 'facebook-jssdk'));
+      })(document, "script", "facebook-jssdk");
     }
 
     return () => {
@@ -65,42 +89,42 @@ function AuthOptions({ setOption }) {
   // 2. Proper Facebook Login Handler
   const handleFacebookLogin = () => {
     if (!window.FB) {
-      console.error('Facebook SDK not loaded yet');
+      console.error("Facebook SDK not loaded yet");
       return;
     }
 
-    window.FB.getLoginStatus(response => {
-      console.log('Current login status:', response);
-      
+    window.FB.getLoginStatus((response) => {
+      console.log("Current login status:", response);
+
       window.FB.login(
-        loginResponse => {
+        (loginResponse) => {
           if (loginResponse.authResponse) {
-            console.log('Welcome! Fetching your information....');
-            window.FB.api('/me', {fields: 'name,email'}, userResponse => {
-              console.log('Good to see you, ' + userResponse.name);
+            console.log("Welcome! Fetching your information....");
+            window.FB.api("/me", { fields: "name,email" }, (userResponse) => {
+              console.log("Good to see you, " + userResponse.name);
               // Send to your backend
-              handleSocialLogin(loginResponse.authResponse.accessToken, 'facebook');
+              handleSocialLogin(
+                loginResponse.authResponse.accessToken,
+                "facebook"
+              );
             });
           } else {
-            console.log('User cancelled login or did not fully authorize.');
+            console.log("User cancelled login or did not fully authorize.");
           }
         },
-        {scope: 'public_profile,email'}
+        { scope: "public_profile,email" }
       );
     });
   };
 
-  const handleSocialLogin = async (token, provider) => {
+  const handleSocialLogin = async (payload, provider) => {
     setLoading((prev) => ({ ...prev, [provider]: true }));
     try {
-      const res = await AxiosInstance.post("/login-social", {
-        provider,
-        token,
-      });
-
-      Cookies.set("token", res.data.token);
-      Cookies.set("username", res.data.name);
-      navigate("/");
+      console.log(payload);
+      const res = await AxiosInstance.post("/login-social", payload);
+      Cookies.set("token", res?.data?.token);
+      Cookies.set("username", res?.data?.name);
+      navigate("/dashboard");
     } catch (error) {
       console.error(
         `${provider} login failed`,
@@ -114,7 +138,6 @@ function AuthOptions({ setOption }) {
   const handleGoogleLogin = () => {
     tokenClient?.requestAccessToken();
   };
-
 
   const handleTwitterLogin = () => {
     window.open(

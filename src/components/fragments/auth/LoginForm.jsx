@@ -38,11 +38,11 @@ function LoginForm({ setOption, setShow }) {
         </div>
         <h1>
           <Back setOption={setOption} />
-          Continue with your mail
+          Continue with your email
         </h1>
         <p>Use your email and password to continue with us </p>
         <Formik
-          initialValues={{ email: "", password: "" }}
+          initialValues={{ username: "", password: "" }}
           onSubmit={(values, { resetForm }) => {
             handleSubmit(values, resetForm, "login", setShow, "/dashboard");
           }}
@@ -50,16 +50,16 @@ function LoginForm({ setOption, setShow }) {
         >
           <Form className="form">
             <div className="input">
-              <span>Your mail</span>
+              <span>Your username</span>
               <div className="field">
                 <Field
-                  name="email"
-                  type="email"
-                  placeholder="Write your mail"
+                  name="username"
+                  type="text"
+                  placeholder="Write your username"
                 />
               </div>
               <p>
-                <ErrorMessage name="email" />
+                <ErrorMessage name="username" />
               </p>
             </div>
             <div className="input">
