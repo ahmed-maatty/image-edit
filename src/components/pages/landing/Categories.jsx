@@ -52,7 +52,6 @@ function Categories() {
     fetchData();
   }, []);
 
-  console.log();
 
   const lines = [
     {

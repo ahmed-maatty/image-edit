@@ -2,10 +2,9 @@ import { Link } from "react-router-dom";
 import Aside from "../fragments/dashboard/Aside";
 import { useDashboardNav } from "../../hooks/DashboardNavHook";
 import { DashboardNav } from "../fragments/dashboard/DashboardNav";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { fabric } from "fabric";
 import * as imglyBackgroundRemoval from "@imgly/background-removal";
-
 import {
   Album,
   AR,
@@ -37,45 +36,104 @@ import {
   Undo,
 } from "../fragments/Editor/Icons";
 import toast from "react-hot-toast";
-import { AxiosBG } from "../../api/axios";
+
+// ===== helpers =====
+const STORAGE_KEY = "editor_canvas_json_v1";
+
+// throttle simple
+const throttle = (fn, delay = 500) => {
+  let last = 0;
+  let timer;
+  return (...args) => {
+    const now = Date.now();
+    if (now - last >= delay) {
+      last = now;
+      fn(...args);
+    } else {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        last = Date.now();
+        fn(...args);
+      }, delay - (now - last));
+    }
+  };
+};
 
 function Editor() {
   const { active, handleActive, handleSearch } = useDashboardNav();
   const canvasRef = useRef(null);
   const [canvas, setCanvas] = useState(null);
+
+  // tools & ui
   const [activeTool, setActiveTool] = useState(null);
   const [filterValue, setFilterValue] = useState(50);
-  const [imageUrl, setImageUrl] = useState(
-    sessionStorage.getItem("imgUrl") || null
-  );
   const [showLayersPanel, setShowLayersPanel] = useState(false);
   const [layers, setLayers] = useState([]);
   const fileInputRef = useRef(null);
+
+  // eraser controls
+  const [eraserSize, setEraserSize] = useState(30);
+  const [isRestoreMode, setIsRestoreMode] = useState(false);
+  const supportsFabricEraser = useMemo(() => !!fabric?.EraserBrush, []);
+
+  // history
   const history = useRef([]);
   const historyIndex = useRef(-1);
+
+  // crop
+  const cropRectRef = useRef(null);
+  const isDrawing = useRef(false);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const cropTargetRef = useRef(null); // الصورة المختارة وقت بدء القص
+
+  // bg remover state
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
 
   useEffect(() => {
     setFilterValue(50);
   }, [activeTool]);
+
+  // init canvas
   useEffect(() => {
     const canvasObj = new fabric.Canvas(canvasRef.current, {
       width: 600,
       height: 500,
       backgroundColor: "#f5f5f5",
-      isDrawingMode: false, // Initially false
-      preserveObjectStacking: true, // Important for eraser
+      isDrawingMode: false,
+      preserveObjectStacking: true,
     });
     setCanvas(canvasObj);
-
-    // Save initial state
-    saveCanvasState(canvasObj);
 
     return () => {
       canvasObj.dispose();
     };
   }, []);
 
-  // Update layers when canvas objects change
+  // load from storage on first ready
+  useEffect(() => {
+    if (!canvas) return;
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const json = JSON.parse(saved);
+        canvas.loadFromJSON(json, () => {
+          canvas.renderAll();
+          // init history with loaded state
+          saveCanvasState(canvas);
+        });
+      } catch {
+        // ignore
+        saveCanvasState(canvas);
+      }
+    } else {
+      // first state
+      saveCanvasState(canvas);
+    }
+  }, [canvas]);
+
+  // save layers & autosave on changes
   useEffect(() => {
     if (!canvas) return;
 
@@ -92,53 +150,98 @@ function Editor() {
       });
 
       const newLayers = filtered.map((obj, index) => ({
-        id: obj.id || `layer-${Date.now()}-${index}`,
+        id: obj.id || `layer-${index}-${Date.now()}`,
         name: obj.name || `Layer ${filtered.length - index}`,
         visible: obj.visible !== false,
+        locked: obj.selectable === false,
         object: obj,
-        index: index,
+        index,
       }));
 
-      setLayers(newLayers.reverse()); // Top layer first
+      setLayers(newLayers.reverse()); // top first
     };
 
-    const onPathCreated = () => {
+    const autosave = throttle(() => {
+      persistCanvas(canvas);
+    }, 700);
+
+    const onAnyChange = () => {
+      updateLayers();
       saveCanvasState(canvas);
+      autosave();
     };
 
-    const cleanEmptyGroups = (e) => {
-      const obj = e.target;
-      if (
-        obj?.type === "group" &&
-        (!obj._objects || obj._objects.length === 0)
-      ) {
-        canvas.remove(obj);
-        canvas.requestRenderAll();
-      }
-    };
+    canvas.on("object:added", onAnyChange);
+    canvas.on("object:removed", onAnyChange);
+    canvas.on("object:modified", onAnyChange);
+    canvas.on("object:moved", onAnyChange);
+    canvas.on("path:created", onAnyChange);
+    canvas.on("selection:updated", updateLayers);
+    canvas.on("selection:created", updateLayers);
+    canvas.on("selection:cleared", updateLayers);
 
-    canvas.on("object:modified", cleanEmptyGroups);
-    canvas.on("object:added", updateLayers);
-    canvas.on("object:removed", updateLayers);
-    canvas.on("object:modified", updateLayers);
-    canvas.on("object:moved", updateLayers);
-    canvas.on("path:created", onPathCreated);
+    updateLayers();
 
     return () => {
-      canvas.off("object:modified", cleanEmptyGroups);
-      canvas.off("object:added", updateLayers);
-      canvas.off("object:removed", updateLayers);
-      canvas.off("object:modified", updateLayers);
-      canvas.off("object:moved", updateLayers);
-      canvas.off("path:created", onPathCreated);
+      canvas.off("object:added", onAnyChange);
+      canvas.off("object:removed", onAnyChange);
+      canvas.off("object:modified", onAnyChange);
+      canvas.off("object:moved", onAnyChange);
+      canvas.off("path:created", onAnyChange);
+      canvas.off("selection:updated", updateLayers);
+      canvas.off("selection:created", updateLayers);
+      canvas.off("selection:cleared", updateLayers);
     };
   }, [canvas]);
 
-  const saveCanvasState = (canvas) => {
-    const state = JSON.stringify(canvas);
-    history.current = history.current.slice(0, historyIndex.current + 1);
-    history.current.push(state);
-    historyIndex.current = history.current.length - 1;
+  // ===== persistence & history =====
+  const persistCanvas = (c) => {
+    try {
+      const json = c.toJSON([
+        "id",
+        "name",
+        "selectable",
+        "erasable",
+        "clipPath",
+        "shadow",
+        "opacity",
+        "visible",
+        "lockMovementX",
+        "lockMovementY",
+        "evented",
+      ]);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(json));
+    } catch {}
+  };
+
+  const saveCanvasState = (c) => {
+    try {
+      const json = c.toJSON([
+        "id",
+        "name",
+        "selectable",
+        "erasable",
+        "clipPath",
+        "shadow",
+        "opacity",
+        "visible",
+        "lockMovementX",
+        "lockMovementY",
+        "evented",
+      ]);
+      const state = JSON.stringify(json);
+      history.current = history.current.slice(0, historyIndex.current + 1);
+      history.current.push(state);
+      historyIndex.current = history.current.length - 1;
+    } catch {}
+  };
+
+  const loadCanvasState = (state) => {
+    const json = JSON.parse(state);
+    canvas.loadFromJSON(json, () => {
+      canvas.renderAll();
+      persistCanvas(canvas);
+    });
   };
 
   const undo = () => {
@@ -153,61 +256,231 @@ function Editor() {
     loadCanvasState(history.current[historyIndex.current]);
   };
 
-  const loadCanvasState = (state) => {
-    canvas.loadFromJSON(state, () => {
-      canvas.renderAll();
-    });
-  };
-
-  // Load image when URL changes
-  useEffect(() => {
-    if (!canvas || !imageUrl) return;
-
-    fabric.Image.fromURL(imageUrl, (img) => {
-      // Scale image to fit canvas while maintaining aspect ratio
-      const scale = Math.min(
-        1,
-        canvas.width / img.width,
-        canvas.height / img.height
-      );
-      img.scale(scale);
-
-      // Center the image
-      img.set({
-        left: canvas.width / 2,
-        top: canvas.height / 2,
-        originX: "center",
-        originY: "center",
-        selectable: true,
-        erasable: true,
-        id: `image-${Date.now()}`,
-        name: "Background Image",
-      });
-
-      canvas.clear();
-      canvas.add(img);
-      canvas.setActiveObject(img);
-      canvas.renderAll();
-      saveCanvasState(canvas);
-    });
-  }, [canvas, imageUrl]);
-
+  // ===== image I/O =====
   const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const file = e.target.files?.[0];
+    if (!file || !canvas) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      setImageUrl(event.target.result);
+      const dataUrl = event.target.result;
+      fabric.Image.fromURL(
+        dataUrl,
+        (img) => {
+          // scale to fit (max width 500)
+          const maxW = Math.min(500, canvas.getWidth() - 40);
+          if (img.width > maxW) {
+            img.scaleToWidth(maxW);
+          }
+          img.set({
+            left: canvas.width / 2,
+            top: canvas.height / 2,
+            originX: "center",
+            originY: "center",
+            selectable: true,
+            erasable: true,
+            id: `image-${Date.now()}`,
+            name: "Image",
+          });
+          canvas.add(img);
+          canvas.setActiveObject(img);
+          canvas.renderAll();
+          saveCanvasState(canvas);
+          persistCanvas(canvas);
+        },
+        { crossOrigin: "anonymous" }
+      );
     };
     reader.readAsDataURL(file);
+    // reset input so same file can be reselected
+    e.target.value = "";
   };
 
-  const cropRectRef = useRef(null);
-  const isDrawing = useRef(false);
-  const startX = useRef(0);
-  const startY = useRef(0);
+  const handleReplaceImage = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !canvas) return;
 
+    const activeObject = canvas.getActiveObject();
+    if (!activeObject || activeObject.type !== "image") {
+      toast.error("Please select an image to replace.");
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (f) => {
+      const dataUrl = f.target.result;
+
+      fabric.Image.fromURL(
+        dataUrl,
+        (newImg) => {
+          newImg.set({
+            left: activeObject.left,
+            top: activeObject.top,
+            scaleX: activeObject.scaleX,
+            scaleY: activeObject.scaleY,
+            angle: activeObject.angle,
+            flipX: activeObject.flipX,
+            flipY: activeObject.flipY,
+            originX: activeObject.originX,
+            originY: activeObject.originY,
+            selectable: true,
+            erasable: true,
+            id: `image-${Date.now()}`,
+            name: "Replaced Image",
+          });
+
+          // keep filters if any
+          if (activeObject.filters?.length) {
+            newImg.filters = [...activeObject.filters];
+            newImg.applyFilters();
+          }
+
+          canvas.remove(activeObject);
+          canvas.add(newImg);
+          canvas.setActiveObject(newImg);
+          canvas.renderAll();
+          saveCanvasState(canvas);
+          persistCanvas(canvas);
+        },
+        { crossOrigin: "anonymous" }
+      );
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const deleteSelected = () => {
+    if (!canvas) return;
+    const selection = canvas.getActiveObjects();
+    if (selection.length) {
+      selection.forEach((obj) => canvas.remove(obj));
+      canvas.discardActiveObject();
+      canvas.requestRenderAll();
+      saveCanvasState(canvas);
+      persistCanvas(canvas);
+    } else {
+      toast.error("Select object(s) to delete");
+    }
+  };
+
+  // ===== filters & tools =====
+  const applyFilter = (filterType) => {
+    if (!canvas) return;
+    const obj = canvas.getActiveObject();
+    if (!obj) {
+      toast.error("Please select object first");
+      return;
+    }
+
+    if (filterType === "opacity") {
+      obj.set("opacity", Number(filterValue) / 100);
+      canvas.requestRenderAll();
+      saveCanvasState(canvas);
+      persistCanvas(canvas);
+      return;
+    }
+
+    if (obj.type !== "image") {
+      toast.error(`${filterType} works on images only`);
+      return;
+    }
+
+    // remove same type filter(s)
+    obj.filters = (obj.filters || []).filter((f) => {
+      const t = (f && f.type) || "";
+      if (filterType === "blur") return t !== "Blur";
+      if (filterType === "contrast") return t !== "Contrast";
+      return true;
+    });
+
+    if (filterType === "blur") {
+      obj.filters.push(
+        new fabric.Image.filters.Blur({ blur: Number(filterValue) / 100 })
+      );
+    } else if (filterType === "contrast") {
+      obj.filters.push(
+        new fabric.Image.filters.Contrast({
+          contrast: Number(filterValue) / 100,
+        })
+      );
+    }
+
+    obj.applyFilters();
+    canvas.requestRenderAll();
+    saveCanvasState(canvas);
+    persistCanvas(canvas);
+  };
+
+  // ===== Eraser Tool (Canvas-like) =====
+  const startErasing = () => {
+    if (!canvas) return;
+
+    setActiveTool("erase");
+    canvas.isDrawingMode = true;
+
+    if (supportsFabricEraser) {
+      // Fabric v5+ EraserBrush (non-destructive)
+      const eraser = new fabric.EraserBrush(canvas);
+      eraser.width = eraserSize;
+      // restore mode = عكس المسح
+      eraser.inverted = !!isRestoreMode;
+      canvas.freeDrawingBrush = eraser;
+
+      // تأكد إن العناصر قابلة للمسح
+      canvas.getObjects().forEach((obj) => {
+        obj.set({ erasable: true });
+        if (obj._objects)
+          obj._objects.forEach((sub) => sub.set({ erasable: true }));
+      });
+    } else {
+      // Fallback بسيط لو Fabric قديم
+      canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+      canvas.freeDrawingBrush.width = eraserSize;
+
+      // تنبيه للمستخدم إن الممحاة الكاملة تحتاج Fabric v5
+      toast(
+        (t) => (
+          <span>
+            Advanced Eraser needs Fabric v5. Using basic brush fallback.
+          </span>
+        ),
+        { id: "fabric-eraser-warning" }
+      );
+
+      // هنوقف الـ selection أثناء الرسم
+      canvas.selection = false;
+      canvas.forEachObject((o) => (o.selectable = false));
+    }
+
+    canvas.requestRenderAll();
+  };
+
+  const stopErasing = () => {
+    if (!canvas) return;
+    setActiveTool(null);
+    canvas.isDrawingMode = false;
+    // رجّع الإعدادات الافتراضية
+    canvas.selection = true;
+    canvas.forEachObject(
+      (o) => (o.selectable = o.selectable !== false ? true : o.selectable)
+    );
+    canvas.renderAll();
+  };
+
+  // لو حجم الفرشة اتغيّر أثناء وضع المسح
+  useEffect(() => {
+    if (!canvas) return;
+    if (activeTool === "erase" && canvas.freeDrawingBrush) {
+      canvas.freeDrawingBrush.width = eraserSize;
+      if (supportsFabricEraser && "inverted" in canvas.freeDrawingBrush) {
+        canvas.freeDrawingBrush.inverted = !!isRestoreMode;
+      }
+      canvas.requestRenderAll();
+    }
+  }, [eraserSize, isRestoreMode, activeTool, canvas, supportsFabricEraser]);
+
+  // ===== crop (cut) =====
   const handleCropMouseDown = (opt) => {
     const pointer = canvas.getPointer(opt.e);
     startX.current = pointer.x;
@@ -219,7 +492,7 @@ function Editor() {
       top: startY.current,
       width: 0,
       height: 0,
-      fill: "rgba(0, 0, 0, 0.3)",
+      fill: "rgba(0,0,0,0.25)",
       stroke: "#666",
       strokeWidth: 1,
       selectable: false,
@@ -231,37 +504,30 @@ function Editor() {
 
   const handleCropMouseMove = (opt) => {
     if (!isDrawing.current || !cropRectRef.current) return;
-
     const pointer = canvas.getPointer(opt.e);
-    const image = canvas.getObjects().find((obj) => obj.type === "image");
 
+    // bounding to selected image
+    const image = cropTargetRef.current;
     if (!image) return;
 
-    // Limit pointer to image bounds
-    const imageBounds = {
+    const imgBounds = {
       left: image.left - (image.width * image.scaleX) / 2,
       right: image.left + (image.width * image.scaleX) / 2,
       top: image.top - (image.height * image.scaleY) / 2,
       bottom: image.top + (image.height * image.scaleY) / 2,
     };
 
-    const x = Math.max(
-      imageBounds.left,
-      Math.min(pointer.x, imageBounds.right)
-    );
-    const y = Math.max(
-      imageBounds.top,
-      Math.min(pointer.y, imageBounds.bottom)
-    );
+    const x = Math.max(imgBounds.left, Math.min(pointer.x, imgBounds.right));
+    const y = Math.max(imgBounds.top, Math.min(pointer.y, imgBounds.bottom));
 
-    const width = x - startX.current;
-    const height = y - startY.current;
+    const w = x - startX.current;
+    const h = y - startY.current;
 
     cropRectRef.current.set({
-      width: Math.abs(width),
-      height: Math.abs(height),
-      left: width < 0 ? x : startX.current,
-      top: height < 0 ? y : startY.current,
+      width: Math.abs(w),
+      height: Math.abs(h),
+      left: w < 0 ? x : startX.current,
+      top: h < 0 ? y : startY.current,
     });
 
     canvas.renderAll();
@@ -271,89 +537,14 @@ function Editor() {
     isDrawing.current = false;
   };
 
-  const applyCrop = () => {
-    if (!canvas || activeTool !== "crop" || !cropRectRef.current) {
-      toast.error("Please select an image first to crop");
-      setActiveTool(null);
-      return;
-    }
-
-    const image = canvas.getObjects().find((obj) => obj.type === "image");
-    if (!image) {
-      toast.error("Please select an image first to crop");
-      setActiveTool(null);
-      return;
-    }
-
-    const cropRect = cropRectRef.current;
-
-    const originalWidth = image.width + (image.cropX || 0);
-    const originalHeight = image.height + (image.cropY || 0);
-
-    const imageLeft = image.left - (image.width * image.scaleX) / 2;
-    const imageTop = image.top - (image.height * image.scaleY) / 2;
-
-    const cropX =
-      (cropRect.left - imageLeft) / image.scaleX + (image.cropX || 0);
-    const cropY = (cropRect.top - imageTop) / image.scaleY + (image.cropY || 0);
-
-    const cropWidth = Math.min(
-      cropRect.width / image.scaleX,
-      originalWidth - cropX
-    );
-    const cropHeight = Math.min(
-      cropRect.height / image.scaleY,
-      originalHeight - cropY
-    );
-
-    const cropped = new fabric.Image(image.getElement(), {
-      left: cropRect.left + cropRect.width / 2,
-      top: cropRect.top + cropRect.height / 2,
-      originX: "center",
-      originY: "center",
-      scaleX: image.scaleX,
-      scaleY: image.scaleY,
-      angle: image.angle,
-      cropX: cropX,
-      cropY: cropY,
-      width: cropWidth,
-      height: cropHeight,
-      selectable: true,
-      evented: true,
-      id: `image-${Date.now()}`,
-      name: "Cropped Image",
-    });
-
-    canvas.remove(image);
-    canvas.remove(cropRect);
-    cropRectRef.current = null;
-    isDrawing.current = false;
-
-    canvas.selection = true;
-    canvas.defaultCursor = "default";
-    canvas.forEachObject((obj) => {
-      obj.selectable = true;
-      obj.evented = true;
-    });
-
-    canvas.off("mouse:down");
-    canvas.off("mouse:move");
-    canvas.off("mouse:up");
-
-    canvas.add(cropped);
-    canvas.setActiveObject(cropped);
-    canvas.requestRenderAll();
-
-    setActiveTool(null);
-    saveCanvasState(canvas);
-  };
-
   const startCropping = () => {
     if (!canvas) return;
-
-    canvas.off("mouse:down", handleCropMouseDown);
-    canvas.off("mouse:move", handleCropMouseMove);
-    canvas.off("mouse:up", handleCropMouseUp);
+    const active = canvas.getActiveObject();
+    if (!active || active.type !== "image") {
+      toast.error("Select an image first, then start crop");
+      return;
+    }
+    cropTargetRef.current = active;
 
     setActiveTool("crop");
     canvas.selection = false;
@@ -372,189 +563,170 @@ function Editor() {
     canvas.requestRenderAll();
   };
 
-  const [isRemovingBg, setIsRemovingBg] = useState(false);
-
-  const removeBackground = async () => {
-    if (!canvas || !canvas.getActiveObject()) {
-      toast.error("Please select an image to remove background");
+  const applyCrop = () => {
+    if (!canvas || activeTool !== "crop" || !cropRectRef.current) {
+      toast.error("Draw a crop area first");
+      setActiveTool(null);
       return;
     }
 
-    const activeObject = canvas.getActiveObject();
-    if (!(activeObject instanceof fabric.Image)) {
-      toast.error("Please select an image to remove background");
+    const image = cropTargetRef.current;
+    if (!image || image.type !== "image") {
+      toast.error("No image selected for crop");
+      cancelCrop();
       return;
     }
 
-    try {
-      setIsRemovingBg(true);
+    const cropRect = cropRectRef.current;
 
-      const imageSrc = activeObject.getSrc();
-      const blob = await imglyBackgroundRemoval.removeBackground(imageSrc);
-      const processedUrl = URL.createObjectURL(blob);
+    // translate rect (canvas coords) -> image coords (before scale/rotate)
+    const imgLeft = image.left - (image.width * image.scaleX) / 2;
+    const imgTop = image.top - (image.height * image.scaleY) / 2;
 
-      fabric.Image.fromURL(processedUrl, (img) => {
-        img.set({
-          left: activeObject.left,
-          top: activeObject.top,
-          scaleX: activeObject.scaleX,
-          scaleY: activeObject.scaleY,
-          angle: activeObject.angle,
-          originX: activeObject.originX,
-          originY: activeObject.originY,
-          flipX: activeObject.flipX,
-          flipY: activeObject.flipY,
-          skewX: activeObject.skewX,
-          skewY: activeObject.skewY,
-          opacity: activeObject.opacity,
-          shadow: activeObject.shadow,
+    const cropX = (cropRect.left - imgLeft) / image.scaleX;
+    const cropY = (cropRect.top - imgTop) / image.scaleY;
+    const cropW = cropRect.width / image.scaleX;
+    const cropH = cropRect.height / image.scaleY;
+
+    // draw to offscreen canvas then replace
+    const el = image.getElement();
+    const off = document.createElement("canvas");
+    off.width = Math.max(1, Math.floor(cropW));
+    off.height = Math.max(1, Math.floor(cropH));
+    const ctx = off.getContext("2d");
+    ctx.drawImage(
+      el,
+      Math.max(0, cropX),
+      Math.max(0, cropY),
+      Math.max(1, cropW),
+      Math.max(1, cropH),
+      0,
+      0,
+      Math.max(1, cropW),
+      Math.max(1, cropH)
+    );
+
+    const dataURL = off.toDataURL("image/png");
+
+    fabric.Image.fromURL(
+      dataURL,
+      (cropped) => {
+        cropped.set({
+          left: cropRect.left + cropRect.width / 2,
+          top: cropRect.top + cropRect.height / 2,
+          originX: "center",
+          originY: "center",
+          scaleX: image.scaleX,
+          scaleY: image.scaleY,
+          angle: image.angle,
           selectable: true,
           erasable: true,
           id: `image-${Date.now()}`,
-          name: "BG Removed Image",
+          name: "Cropped Image",
         });
 
-        if (activeObject.filters?.length) {
-          img.filters = [...activeObject.filters];
-          img.applyFilters();
+        // keep filters
+        if (image.filters?.length) {
+          cropped.filters = [...image.filters];
+          cropped.applyFilters();
         }
 
-        if (activeObject.clipPath) {
-          img.clipPath = activeObject.clipPath;
-        }
+        // cleanup crop UI
+        canvas.remove(image);
+        canvas.remove(cropRect);
+        cropRectRef.current = null;
+        cropTargetRef.current = null;
 
-        img.set({
-          width: activeObject.width,
-          height: activeObject.height,
+        canvas.selection = true;
+        canvas.defaultCursor = "default";
+        canvas.forEachObject((obj) => {
+          obj.selectable = true;
+          obj.evented = true;
         });
 
-        canvas.remove(activeObject);
-        canvas.add(img);
-        canvas.setActiveObject(img);
-        canvas.renderAll();
+        canvas.off("mouse:down", handleCropMouseDown);
+        canvas.off("mouse:move", handleCropMouseMove);
+        canvas.off("mouse:up", handleCropMouseUp);
+
+        setActiveTool(null);
+
+        canvas.add(cropped);
+        canvas.setActiveObject(cropped);
+        canvas.requestRenderAll();
         saveCanvasState(canvas);
-
-        URL.revokeObjectURL(processedUrl);
-      });
-    } catch (error) {
-      console.error("Background removal failed:", error);
-      toast.error("Background removal failed. Please try again.");
-    } finally {
-      setIsRemovingBg(false);
-    }
+        persistCanvas(canvas);
+      },
+      { crossOrigin: "anonymous" }
+    );
   };
 
-  const deleteSelected = () => {
+  const cancelCrop = () => {
     if (!canvas) return;
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-      canvas.remove(activeObject);
-      saveCanvasState(canvas);
-    } else {
-      toast.error("Select object to delete");
-    }
-  };
-
-  const startErasing = () => {
-    if (!canvas) return;
-
-    setActiveTool("erase");
-    canvas.isDrawingMode = true;
-
-    canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-    canvas.freeDrawingBrush.color = "#f5f5f5";
-    canvas.freeDrawingBrush.width = 30;
-
-    canvas.getObjects().forEach((obj) => {
-      obj.set({ erasable: true });
-
-      if (obj._objects) {
-        obj._objects.forEach((subObj) => subObj.set({ erasable: true }));
-      }
+    setActiveTool(null);
+    canvas.selection = true;
+    canvas.defaultCursor = "default";
+    canvas.forEachObject((obj) => {
+      obj.selectable = true;
+      obj.evented = true;
     });
-
+    if (cropRectRef.current) {
+      canvas.remove(cropRectRef.current);
+      cropRectRef.current = null;
+    }
+    cropTargetRef.current = null;
+    canvas.off("mouse:down", handleCropMouseDown);
+    canvas.off("mouse:move", handleCropMouseMove);
+    canvas.off("mouse:up", handleCropMouseUp);
     canvas.requestRenderAll();
   };
 
-  const stopErasing = () => {
-    if (!canvas) return;
-
-    setActiveTool(null);
-    canvas.isDrawingMode = false;
-    canvas.renderAll();
-  };
-
-  const handleCanvasObjectModified = () => {
-    saveCanvasState(canvas);
-  };
+  // ===== download trimmed =====
   const downloadImage = () => {
     if (!canvas) return;
 
-    // Create a temporary image to ensure the canvas is fully rendered
     const tempImg = new Image();
     tempImg.crossOrigin = "anonymous";
-    tempImg.src = canvas.toDataURL("image/png");
+    tempImg.src = canvas.toDataURL({ format: "png" });
 
     tempImg.onload = () => {
-      // Create a temporary canvas to analyze the image
       const tempCanvas = document.createElement("canvas");
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
       const tempCtx = tempCanvas.getContext("2d");
       tempCtx.drawImage(tempImg, 0, 0);
 
-      // Get the pixel data
-      const pixels = tempCtx.getImageData(
+      const { data, width, height } = tempCtx.getImageData(
         0,
         0,
         tempCanvas.width,
         tempCanvas.height
-      ).data;
-
-      // Calculate the bounding box of non-transparent pixels
-      let minX = tempCanvas.width,
-        minY = tempCanvas.height,
+      );
+      let minX = width,
+        minY = height,
         maxX = 0,
         maxY = 0;
 
-      for (let y = 0; y < tempCanvas.height; y++) {
-        for (let x = 0; x < tempCanvas.width; x++) {
-          const alpha = pixels[(y * tempCanvas.width + x) * 4 + 3];
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const alpha = data[(y * width + x) * 4 + 3];
           if (alpha > 0) {
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
           }
         }
       }
 
-      // Calculate width and height of the content
-      const width = maxX - minX + 1;
-      const height = maxY - minY + 1;
+      const outW = Math.max(1, maxX - minX + 1);
+      const outH = Math.max(1, maxY - minY + 1);
+      const trimmed = document.createElement("canvas");
+      trimmed.width = outW;
+      trimmed.height = outH;
+      const tctx = trimmed.getContext("2d");
+      tctx.drawImage(tempImg, minX, minY, outW, outH, 0, 0, outW, outH);
 
-      // Create the final trimmed canvas
-      const trimmedCanvas = document.createElement("canvas");
-      trimmedCanvas.width = width;
-      trimmedCanvas.height = height;
-      const trimmedCtx = trimmedCanvas.getContext("2d");
-
-      // Draw only the content area from the original image
-      trimmedCtx.drawImage(
-        tempImg,
-        minX,
-        minY,
-        width,
-        height, // source rectangle
-        0,
-        0,
-        width,
-        height // destination rectangle
-      );
-
-      // Export the trimmed canvas
-      const dataURL = trimmedCanvas.toDataURL("image/png");
-
+      const dataURL = trimmed.toDataURL("image/png");
       const link = document.createElement("a");
       link.download = `edited-image-${Date.now()}.png`;
       link.href = dataURL;
@@ -562,88 +734,82 @@ function Editor() {
       link.click();
       document.body.removeChild(link);
     };
-
-    tempImg.onerror = () => {
-      console.error("Error loading temporary image");
-    };
   };
 
-  const applyFilter = (filterType) => {
-    if (!canvas || !canvas.getActiveObject()) {
-      toast.error("Please select object first");
-      return;
+  // ===== sidebars & buttons =====
+  const [activeButton, setActiveButton] = useState(null);
+
+  const handleButtonClick = (buttonName) => {
+    setActiveButton((prev) => (prev === buttonName ? null : buttonName));
+    if (activeTool === "erase") stopErasing();
+    if (buttonName === "Background") setActiveTool(null);
+  };
+
+  const handleColorClick = (color) => {
+    if (!canvas) return;
+    const active = canvas.getActiveObject();
+    if (active && active.set) {
+      active.set("fill", color);
+      canvas.renderAll();
+    } else {
+      canvas.setBackgroundColor(color, () => canvas.renderAll());
     }
-
-    const activeObject = canvas.getActiveObject();
-
-    activeObject.filters =
-      activeObject.filters?.filter((f) => !f.type.includes(filterType)) || [];
-
-    if (filterType === "blur") {
-      activeObject.filters.push(
-        new fabric.Image.filters.Blur({
-          blur: filterValue / 100,
-        })
-      );
-    } else if (filterType === "opacity") {
-      activeObject.opacity = filterValue / 100;
-    } else if (filterType === "contrast") {
-      activeObject.filters.push(
-        new fabric.Image.filters.Contrast({
-          contrast: filterValue / 100,
-        })
-      );
-    }
-
-    activeObject.applyFilters();
-    canvas.renderAll();
     saveCanvasState(canvas);
+    persistCanvas(canvas);
   };
-  useEffect(() => {
+
+  const directionToCoords = (direction) => {
+    const map = {
+      "to top": [0.5, 1, 0.5, 0],
+      "to bottom": [0.5, 0, 0.5, 1],
+      "to left": [1, 0.5, 0, 0.5],
+      "to right": [0, 0.5, 1, 0.5],
+      "to top left": [1, 1, 0, 0],
+      "to top right": [0, 1, 1, 0],
+      "to bottom left": [1, 0, 0, 1],
+      "to bottom right": [0, 0, 1, 1],
+    };
+
+    if (map[direction]) return map[direction];
+
+    const angle = parseFloat(direction);
+    const rad = (angle * Math.PI) / 180;
+    const x1 = 0.5 - 0.5 * Math.cos(rad);
+    const y1 = 0.5 + 0.5 * Math.sin(rad);
+    const x2 = 0.5 + 0.5 * Math.cos(rad);
+    const y2 = 0.5 - 0.5 * Math.sin(rad);
+    return [x1, y1, x2, y2];
+  };
+
+  const handleGradientClick = ({ colors, direction }) => {
     if (!canvas) return;
 
-    canvas.on("object:modified", handleCanvasObjectModified);
-    return () => {
-      canvas.off("object:modified", handleCanvasObjectModified);
-    };
-  }, [canvas]);
+    const width = canvas.width;
+    const height = canvas.height;
 
-  const handleReplaceImage = (e) => {
-    const file = e.target.files[0];
-    // if (!file || !canvas) return;
+    const [x1, y1, x2, y2] = directionToCoords(direction).map((val, i) =>
+      i % 2 === 0 ? val * width : val * height
+    );
 
-    const reader = new FileReader();
-    reader.onload = (f) => {
-      const dataUrl = f.target.result;
+    const gradient = new fabric.Gradient({
+      type: "linear",
+      gradientUnits: "pixels",
+      coords: { x1, y1, x2, y2 },
+      colorStops: [
+        { offset: 0, color: colors[0] },
+        { offset: 1, color: colors[1] },
+      ],
+    });
 
-      const activeObject = canvas.getActiveObject();
-      if (!activeObject || activeObject.type !== "image") {
-        toast.error("Please select an image to replace.");
-        return;
-      }
-
-      fabric.Image.fromURL(dataUrl, (newImg) => {
-        newImg.set({
-          left: activeObject.left,
-          top: activeObject.top,
-          scaleX: activeObject.scaleX,
-          scaleY: activeObject.scaleY,
-          angle: activeObject.angle,
-          flipX: activeObject.flipX,
-          flipY: activeObject.flipY,
-          originX: activeObject.originX,
-          originY: activeObject.originY,
-          selectable: true,
-          erasable: true,
-        });
-
-        canvas.remove(activeObject);
-        canvas.add(newImg);
-        canvas.setActiveObject(newImg);
-        canvas.renderAll();
-      });
-    };
-    reader.readAsDataURL(file);
+    const activeObj = canvas.getActiveObject();
+    if (activeObj) {
+      activeObj.set("fill", gradient);
+      canvas.requestRenderAll();
+    } else {
+      canvas.setBackgroundColor(gradient, () => canvas.renderAll());
+    }
+    saveCanvasState(canvas);
+    persistCanvas(canvas);
   };
 
   const toolbarButtons = [
@@ -661,27 +827,71 @@ function Editor() {
         />
       ),
     },
-    {
-      name: "Delete",
-      icon: <Delete />,
-      onClick: deleteSelected,
-    },
+    { name: "Delete", icon: <Delete />, onClick: deleteSelected },
     {
       name: activeTool === "crop" ? "Apply Crop" : "Crop",
       icon: <Crop />,
-      onClick:
-        activeTool === "crop"
-          ? applyCrop
-          : () => {
-              setActiveTool("crop");
-              startCropping();
-            },
+      onClick: activeTool === "crop" ? applyCrop : startCropping,
       className: activeTool === "crop" ? "active" : "",
     },
     {
       name: isRemovingBg ? "Processing..." : "BG Remover",
       icon: <BgRemove />,
-      onClick: removeBackground,
+      onClick: async () => {
+        if (!canvas || !canvas.getActiveObject()) {
+          toast.error("Please select an image to remove background");
+          return;
+        }
+        const activeObject = canvas.getActiveObject();
+        if (!(activeObject instanceof fabric.Image)) {
+          toast.error("Please select an image to remove background");
+          return;
+        }
+        try {
+          setIsRemovingBg(true);
+          const imageSrc = activeObject.getSrc();
+          const blob = await imglyBackgroundRemoval.removeBackground(imageSrc);
+          const processedUrl = URL.createObjectURL(blob);
+
+          fabric.Image.fromURL(processedUrl, (img) => {
+            img.set({
+              left: activeObject.left,
+              top: activeObject.top,
+              scaleX: activeObject.scaleX,
+              scaleY: activeObject.scaleY,
+              angle: activeObject.angle,
+              originX: activeObject.originX,
+              originY: activeObject.originY,
+              flipX: activeObject.flipX,
+              flipY: activeObject.flipY,
+              skewX: activeObject.skewX,
+              skewY: activeObject.skewY,
+              opacity: activeObject.opacity,
+              shadow: activeObject.shadow,
+              selectable: true,
+              erasable: true,
+              id: `image-${Date.now()}`,
+              name: "BG Removed Image",
+            });
+            if (activeObject.filters?.length) {
+              img.filters = [...activeObject.filters];
+              img.applyFilters();
+            }
+            canvas.remove(activeObject);
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            canvas.renderAll();
+            saveCanvasState(canvas);
+            persistCanvas(canvas);
+            URL.revokeObjectURL(processedUrl);
+          });
+        } catch (err) {
+          console.error(err);
+          toast.error("Background removal failed. Please try again.");
+        } finally {
+          setIsRemovingBg(false);
+        }
+      },
       disabled: isRemovingBg,
     },
     {
@@ -691,20 +901,6 @@ function Editor() {
         setActiveTool("fill");
         setActiveButton("Background");
       },
-      // extra: showColorPicker && (
-      //   <div className="color-picker-popup">
-      //     <ChromePicker
-      //       color={selectedColor}
-      //       onChangeComplete={(color) => {
-      //         const { r, g, b, a } = color.rgb;
-      //         setSelectedColor(`rgba(${r}, ${g}, ${b}, ${a})`);
-      //       }}
-      //     />
-      //     <button className="btn smallBtn" onClick={fillWithColor}>
-      //       Apply
-      //     </button>
-      //   </div>
-      // ),
     },
     {
       name: "Opacity",
@@ -731,7 +927,17 @@ function Editor() {
       onClick: activeTool === "erase" ? stopErasing : startErasing,
       className: activeTool === "erase" ? "active" : "",
     },
+    ...(activeTool === "crop"
+      ? [
+          {
+            name: "Cancel Crop",
+            icon: <Undo />,
+            onClick: cancelCrop,
+          },
+        ]
+      : []),
   ];
+
   const toolbarTextButtons = [
     {
       name: "English",
@@ -780,11 +986,6 @@ function Editor() {
       onClick: () => setActiveTool("Colors"),
       icon: <Colors />,
     },
-    // {
-    //   name: "Resize",
-    //   onClick: () => setActiveTool("Resize"),
-    //   icon: <Resize />,
-    // },
     {
       name: "Shadow",
       onClick: () =>
@@ -802,11 +1003,12 @@ function Editor() {
               top: activeObject.top + 10,
               evented: true,
             });
-            if (cloned.canvas) cloned.canvas = null; // Detach from any previous canvas
+            if (cloned.canvas) cloned.canvas = null;
             canvas.add(cloned);
             canvas.setActiveObject(cloned);
             canvas.requestRenderAll();
             saveCanvasState(canvas);
+            persistCanvas(canvas);
           });
         } else {
           toast.error("Please select object to duplicate");
@@ -814,16 +1016,11 @@ function Editor() {
       },
       icon: <Duplicate />,
     },
-    {
-      name: "Delete",
-      onClick: deleteSelected,
-      icon: <Delete />,
-    },
+    { name: "Delete", onClick: deleteSelected, icon: <Delete /> },
   ];
+
   const shadowXRef = useRef(5);
   const shadowYRef = useRef(5);
-
-  const [activeButton, setActiveButton] = useState(null);
 
   const buttons = [
     { name: "Background", icon: <BG />, hasFill: true },
@@ -834,88 +1031,6 @@ function Editor() {
     { name: "Photo", icon: <Photo />, hasFill: false },
     { name: "Album", icon: <Album />, hasFill: false },
   ];
-
-  const handleButtonClick = (buttonName) => {
-    setActiveButton((prev) => (prev === buttonName ? null : buttonName));
-    if (activeTool === "fill") {
-      setActiveTool(null);
-    }
-    if (activeTool === "erase") {
-      stopErasing();
-    }
-    if (buttonName === "Background") {
-      setActiveTool(null);
-    }
-
-    // if (buttonName === "Text") {
-    //   setActiveTool("English"); // Ensures default toolbar (not en/ar/color directly)
-    // }
-  };
-
-  const handleColorClick = (color) => {
-    if (!canvas) return;
-
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-      activeObject.set("fill", color);
-      canvas.renderAll();
-    } else {
-      canvas.setBackgroundColor(color, () => canvas.renderAll());
-    }
-  };
-
-  const directionToCoords = (direction) => {
-    const map = {
-      "to top": [0.5, 1, 0.5, 0],
-      "to bottom": [0.5, 0, 0.5, 1],
-      "to left": [1, 0.5, 0, 0.5],
-      "to right": [0, 0.5, 1, 0.5],
-      "to top left": [1, 1, 0, 0],
-      "to top right": [0, 1, 1, 0],
-      "to bottom left": [1, 0, 0, 1],
-      "to bottom right": [0, 0, 1, 1],
-    };
-
-    if (map[direction]) return map[direction];
-
-    const angle = parseFloat(direction);
-    const rad = (angle * Math.PI) / 180;
-    const x1 = 0.5 - 0.5 * Math.cos(rad);
-    const y1 = 0.5 + 0.5 * Math.sin(rad);
-    const x2 = 0.5 + 0.5 * Math.cos(rad);
-    const y2 = 0.5 - 0.5 * Math.sin(rad);
-    return [x1, y1, x2, y2];
-  };
-
-  const handleGradientClick = ({ colors, direction }) => {
-    if (!canvas) return;
-
-    const width = canvas.width;
-    const height = canvas.height;
-
-    const [x1, y1, x2, y2] = directionToCoords(direction).map((val, i) =>
-      i % 2 === 0 ? val * width : val * height
-    );
-
-    const gradient = new fabric.Gradient({
-      type: "linear",
-      gradientUnits: "pixels",
-      coords: { x1, y1, x2, y2 },
-      colorStops: [
-        { offset: 0, color: colors[0] },
-        { offset: 1, color: colors[1] },
-      ],
-    });
-
-    const activeObject = canvas.getActiveObject();
-
-    if (activeObject) {
-      activeObject.set("fill", gradient);
-      canvas.requestRenderAll();
-    } else {
-      canvas.setBackgroundColor(gradient, () => canvas.renderAll());
-    }
-  };
 
   return (
     <div
@@ -947,12 +1062,14 @@ function Editor() {
                 </button>
               ))}
             </div>
+
             {activeButton === "Background" && activeTool === null && (
               <BackroundSide
                 fileInputRef={fileInputRef}
                 handleFileUpload={handleFileUpload}
               />
             )}
+
             {activeButton === "Background" && activeTool === "fill" && (
               <BackroundSideFill
                 fileInputRef={fileInputRef}
@@ -961,6 +1078,7 @@ function Editor() {
                 handleGradientClick={handleGradientClick}
               />
             )}
+
             {activeTool === "English" && <EnFonts />}
             {activeTool === "Arabic" && <ArFonts />}
             {activeTool === "Colors" && (
@@ -970,11 +1088,12 @@ function Editor() {
               />
             )}
           </div>
+
           <div className="image-editor">
             <div className="mainTools">
               <div className="tools">
                 <div className="toolbar">
-                  {activeButton === "Text" && (
+                  {activeButton === "Text" ? (
                     <>
                       {toolbarTextButtons.map((button, index) => (
                         <button
@@ -985,13 +1104,10 @@ function Editor() {
                         >
                           {button?.icon}
                           {button.name}
-                          {button.extra}
                         </button>
                       ))}
                     </>
-                  )}
-
-                  {activeButton !== "Text" &&
+                  ) : (
                     toolbarButtons.map((button, index) => (
                       <div
                         key={index}
@@ -1020,13 +1136,15 @@ function Editor() {
                         )}
                         {button.extra}
                       </div>
-                    ))}
+                    ))
+                  )}
                 </div>
+
+                {/* Undo/Redo */}
                 <div className="redoundo">
                   <button onClick={undo} disabled={historyIndex.current <= 0}>
                     <Undo />
                   </button>
-
                   <button
                     onClick={redo}
                     disabled={
@@ -1036,9 +1154,11 @@ function Editor() {
                     <Redo />
                   </button>
                 </div>
-                {activeTool === "opacity" ||
-                activeTool === "blur" ||
-                activeTool === "contrast" ? (
+
+                {/* Filters panel */}
+                {(activeTool === "opacity" ||
+                  activeTool === "blur" ||
+                  activeTool === "contrast") && (
                   <div className="filter-control">
                     <div className="tandv">
                       <span>{activeTool}</span>
@@ -1049,7 +1169,7 @@ function Editor() {
                       min="0"
                       max="100"
                       value={filterValue}
-                      onChange={(e) => setFilterValue(e.target.value)}
+                      onChange={(e) => setFilterValue(Number(e.target.value))}
                     />
                     <button
                       className="btn btnsmall"
@@ -1058,8 +1178,9 @@ function Editor() {
                       Apply
                     </button>
                   </div>
-                ) : null}
+                )}
 
+                {/* Shadow panel */}
                 {activeTool === "Shadow" && (
                   <form
                     className="filter-control"
@@ -1069,12 +1190,12 @@ function Editor() {
                       if (obj) {
                         obj.set("shadow", {
                           color: "rgba(0,0,0,0.3)",
-                          // blur: 5,
-                          offsetX: parseInt(shadowXRef.current.value || 0),
-                          offsetY: parseInt(shadowYRef.current.value || 0),
+                          offsetX: parseInt(shadowXRef.current.value || 0, 10),
+                          offsetY: parseInt(shadowYRef.current.value || 0, 10),
                         });
                         canvas.requestRenderAll();
                         saveCanvasState(canvas);
+                        persistCanvas(canvas);
                         setActiveTool(null);
                       } else {
                         toast.error("Please select object first");
@@ -1118,7 +1239,39 @@ function Editor() {
                     </button>
                   </form>
                 )}
+
+                {/* Eraser panel */}
+                {activeTool === "erase" && (
+                  <div className="filter-control">
+                    <div className="tandv">
+                      <span>Brush Size</span>
+                      <span>{eraserSize}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="150"
+                      value={eraserSize}
+                      onChange={(e) => setEraserSize(Number(e.target.value))}
+                    />
+                    <div className="tandv" style={{ marginTop: 10 }}>
+                      <span>Mode</span>
+                      <button
+                        className="btn btnsmall"
+                        onClick={() => setIsRestoreMode((v) => !v)}
+                        title={
+                          supportsFabricEraser
+                            ? "Toggle Erase/Restore"
+                            : "Restore needs Fabric v5"
+                        }
+                      >
+                        {isRestoreMode ? "Restore" : "Erase"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
+
               <div className="canvas-container">
                 <canvas
                   className={isRemovingBg ? "isRemovingBg" : ""}
@@ -1126,6 +1279,8 @@ function Editor() {
                 />
               </div>
             </div>
+
+            {/* Layers */}
             <div className="layersB">
               <button
                 onClick={() => setShowLayersPanel(!showLayersPanel)}
@@ -1134,21 +1289,21 @@ function Editor() {
                 <Layers />
                 Layers
               </button>
+
               {showLayersPanel && (
                 <div className="layers-panel">
                   <div className="layers-list">
                     {layers.map((layer, index) => (
                       <div
                         key={layer.id}
-                        className="layer-img"
+                        className="layer-img layer-item"
                         draggable
-                        // onDoubleClick={() => {
-                        //   layer.object.visible = !layer.object.visible;
-                        //   canvas.requestRenderAll();
-                        // }}
                         onDragStart={(e) => {
-                          e.dataTransfer.setData("text/plain", index);
-                          e.currentTarget.style.opacity = "0.4"; // Visual feedback
+                          e.dataTransfer.setData(
+                            "text/plain",
+                            index.toString()
+                          );
+                          e.currentTarget.style.opacity = "0.4";
                         }}
                         onDragEnd={(e) => {
                           e.currentTarget.style.opacity = "1";
@@ -1165,28 +1320,28 @@ function Editor() {
                           e.currentTarget.classList.remove("drag-over");
 
                           const fromIndex = parseInt(
-                            e.dataTransfer.getData("text/plain")
+                            e.dataTransfer.getData("text/plain"),
+                            10
                           );
                           const toIndex = index;
-
                           if (fromIndex === toIndex) return;
 
-                          // Create new array without mutating state directly
                           const newLayers = [...layers];
                           const [movedLayer] = newLayers.splice(fromIndex, 1);
                           newLayers.splice(toIndex, 0, movedLayer);
 
-                          // Update both state and canvas
                           setLayers(newLayers);
-
-                          // Important: Update canvas z-index without removing objects
                           canvas.discardActiveObject();
-                          newLayers.forEach((layerObj, idx) => {
-                            canvas.moveTo(layerObj.object, idx);
-                          });
-
+                          // Fabric عنده z-index: 0 هي أسفل شيء
+                          newLayers
+                            .slice()
+                            .reverse()
+                            .forEach((layerObj, idx) => {
+                              canvas.moveTo(layerObj.object, idx);
+                            });
                           canvas.requestRenderAll();
                           saveCanvasState(canvas);
+                          persistCanvas(canvas);
                         }}
                       >
                         <img
@@ -1205,6 +1360,8 @@ function Editor() {
                             canvas.requestRenderAll();
                           }}
                         />
+
+                        
                       </div>
                     ))}
                   </div>
@@ -1219,8 +1376,11 @@ function Editor() {
   );
 }
 
+
+
 export default Editor;
 
+// ===== Side components (كما هي مع تحسينات بسيطة) =====
 function BackroundSide({ fileInputRef, handleFileUpload }) {
   return (
     <div className="showSide">
@@ -1234,9 +1394,7 @@ function BackroundSide({ fileInputRef, handleFileUpload }) {
         name="file"
         ref={fileInputRef}
         onChange={handleFileUpload}
-        style={{
-          display: "none",
-        }}
+        style={{ display: "none" }}
         accept="image/png,image/jpg,image/jpeg"
       />
       <div className="recent recent3">
@@ -1304,9 +1462,7 @@ function BackroundSideFill({
         name="file"
         ref={fileInputRef}
         onChange={handleFileUpload}
-        style={{
-          display: "none",
-        }}
+        style={{ display: "none" }}
         accept="image/png,image/jpg,image/jpeg"
       />
       <div className="colors">

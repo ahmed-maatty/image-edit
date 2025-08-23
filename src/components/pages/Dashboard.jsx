@@ -71,7 +71,7 @@ function Dashboard() {
                 <img src="/media/icons/w44.png" alt="" />
                 AI tools
               </Link>
-              <Link to={"##"}>
+              <Link to={"/editor"}>
                 <img src="/media/icons/w33.png" alt="" />
                 Whiteboard
               </Link>
@@ -88,7 +88,7 @@ function Dashboard() {
           <div className="recent recent2">
             <h3>Quick access </h3>
             <div className="qaccess">
-              <Link to={"##"}>
+              <Link to={"/generate"}>
                 <svg
                   width="40"
                   height="40"
@@ -104,7 +104,7 @@ function Dashboard() {
                 </svg>
                 Text to img
               </Link>
-              <Link to={"##"}>
+              <Link to={"/bg-remover"}>
                 <svg
                   width="40"
                   height="40"
@@ -120,7 +120,7 @@ function Dashboard() {
                 </svg>
                 Remove BG
               </Link>
-              <Link to={"##"}>
+              <Link to={"/up-scale"}>
                 <svg
                   width="40"
                   height="40"

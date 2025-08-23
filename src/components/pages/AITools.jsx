@@ -32,11 +32,11 @@ function AITools() {
           <div className="discover">
                 <h1>Another way to design</h1>
             <div className="discoverLinks">
-              <Link to={"##"}>
+              <Link to={"/editor"}>
                 <img src="/media/icons/w1.png" alt="" />
                 Whiteboard
               </Link>
-              <Link to={"##"}>
+              <Link to={"/backgrounds"}>
                 <img src="/media/icons/w2.png" alt="" />
                 Backgrounds
               </Link>

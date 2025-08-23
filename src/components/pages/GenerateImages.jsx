@@ -4,6 +4,7 @@ import { useDashboardNav } from "../../hooks/DashboardNavHook";
 import { DashboardNav } from "../fragments/dashboard/DashboardNav";
 import { useState } from "react";
 import AlsoLinks from "../fragments/ai/AlsoLinks";
+import axios from "axios";
 const aspectRatios = [
   "1:1",
   "3:4",
@@ -81,13 +82,29 @@ function GenerateImages() {
   };
   const handleDownload = (event) => {
     const url = event.target.src;
-    const filename = url.split("/").pop(); 
+    const filename = url.split("/").pop();
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const [prompt, setPrompet] = useState("");
+
+  const generateImageHandelr = async function () {
+    const res = await axios.post(
+      "https://api.freepik.com/v1/ai/text-to-image",
+      { prompt, aspect_ratio: selectedRatio, num_images: 1 },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-freepik-api-key": "FPSXc440f64b9744411a860d75b3fbd92843",
+        },
+      }
+    );
+    console.log(res)
   };
 
   return (
@@ -97,7 +114,7 @@ function GenerateImages() {
         <DashboardNav handleActive={handleActive} handleSearch={handleSearch} />
         <div className="content">
           <div className="igContent">
-            <AlsoLinks/>
+            <AlsoLinks />
             <div className="otherContent">
               <div className="generateInput">
                 <h1>What will you design today?</h1>
@@ -107,6 +124,7 @@ function GenerateImages() {
                       name="text"
                       type="text"
                       placeholder="Write what you imagine here"
+                      onChange={(e) => setPrompet(e.target.value)}
                     />
                   </div>
                 </div>
@@ -197,7 +215,7 @@ function GenerateImages() {
                       )}
                     </div>
                   </div>
-                  <button className="btn btn2 btn3">
+                  <button className="btn btn2 btn3" onClick={() => generateImageHandelr()}>
                     <svg
                       width="25"
                       height="24"
