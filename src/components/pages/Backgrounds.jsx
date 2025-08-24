@@ -145,8 +145,8 @@ function Backgrounds() {
                       key={index}
                       onClick={() => {
                         const imgUrl = `http://3rabapp.com/apps/assets/bg-thnumbail/cat${category.index}-${index}.png`;
-                        sessionStorage.setItem("imgUrl", imgUrl);
-                        navigate("/editor");
+                        localStorage.setItem("BackGroundUrl",imgUrl)
+                        navigate("/editor")
                       }}
                     >
                       <img

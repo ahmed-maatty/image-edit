@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Aside from "../fragments/dashboard/Aside";
 import { useDashboardNav } from "../../hooks/DashboardNavHook";
 import { DashboardNav } from "../fragments/dashboard/DashboardNav";
@@ -7,6 +7,22 @@ import { Autoplay, Pagination } from "swiper/modules";
 
 function Dashboard() {
   const { active, handleActive, handleSearch } = useDashboardNav();
+  const navigate = useNavigate();
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      console.log("Base64 Image:", base64);
+      localStorage.setItem("uploadedImage", base64);
+    };
+    reader.readAsDataURL(file);
+
+    e.target.value = "";
+    navigate("/editor");
+  };
 
   return (
     <div className={active ? "dashborad active" : "dashborad"}>
@@ -79,10 +95,21 @@ function Dashboard() {
                 <img src="/media/icons/w22.png" alt="" />
                 Backgrounds
               </Link>
-              <Link to={"##"}>
-                <img src="/media/icons/w11.png" alt="" />
-                Upload photo
-              </Link>
+              <button className="upload-btn-editor">
+                <label htmlFor="file">
+                  <img src="/media/icons/w11.png" alt="" />
+                  Upload photo
+                </label>
+                <input
+                  type="file"
+                  hidden
+                  id="file"
+                  name="file"
+                  onChange={handleFileUpload}
+                  style={{ display: "none" }}
+                  accept="image/png,image/jpg,image/jpeg"
+                />
+              </button>
             </div>
           </div>
           <div className="recent recent2">

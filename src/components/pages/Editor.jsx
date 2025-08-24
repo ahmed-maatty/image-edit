@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Aside from "../fragments/dashboard/Aside";
 import { useDashboardNav } from "../../hooks/DashboardNavHook";
 import { DashboardNav } from "../fragments/dashboard/DashboardNav";
@@ -85,7 +85,7 @@ function Editor() {
   const isDrawing = useRef(false);
   const startX = useRef(0);
   const startY = useRef(0);
-  const cropTargetRef = useRef(null); // الصورة المختارة وقت بدء القص
+  const cropTargetRef = useRef(null);
 
   // bg remover state
   const [isRemovingBg, setIsRemovingBg] = useState(false);
@@ -99,15 +99,42 @@ function Editor() {
     const canvasObj = new fabric.Canvas(canvasRef.current, {
       width: 600,
       height: 500,
-      backgroundColor: "#f5f5f5",
       isDrawingMode: false,
       preserveObjectStacking: true,
     });
-    setCanvas(canvasObj);
 
-    return () => {
-      canvasObj.dispose();
-    };
+    fabric.Image.fromURL("/media/dottedimage.png", (img) => {
+      img.set({
+        left: 0,
+        top: 0,
+        selectable: false,
+        evented: false,
+        scaleX: canvasObj.width / img.width,
+        scaleY: canvasObj.height / img.height,
+      });
+      canvasObj.add(img);
+      canvasObj.sendToBack(img);
+
+      const fillRect = new fabric.Rect({
+        left: 0,
+        top: 0,
+        width: canvasObj.width,
+        height: canvasObj.height,
+        fill: "transparent",
+        selectable: false,
+        evented: false,
+      });
+
+      canvasObj.add(fillRect);
+      canvasObj.sendToBack(fillRect);
+      canvasObj.renderAll();
+
+      setCanvas(canvasObj);
+
+      canvasObj.fillRect = fillRect;
+    });
+
+    return () => canvasObj.dispose();
   }, []);
 
   // load from storage on first ready
@@ -129,6 +156,42 @@ function Editor() {
       }
     } else {
       // first state
+      saveCanvasState(canvas);
+    }
+  
+    const uploadedImage = localStorage.getItem("uploadedImage")
+
+    fabric.Image.fromURL(uploadedImage, (img) => {
+    canvas.add(img);
+    canvas.renderAll();
+
+    persistCanvas(canvas);
+    saveCanvasState(canvas);
+  });
+
+    const bgUrl = localStorage.getItem("BackGroundUrl");
+    if (bgUrl) {
+      fabric.Image.fromURL(
+        bgUrl,
+        (img) => {
+          img.set({
+            left: 0,
+            top: 0,
+            selectable: false,
+            evented: false,
+            scaleX: canvas.width / img.width,
+            scaleY: canvas.height / img.height,
+          });
+
+          canvas.add(img);
+          canvas.renderAll();
+          saveCanvasState(canvas);
+        },
+        {
+          crossOrigin: "anonymous",
+        }
+      );
+    } else {
       saveCanvasState(canvas);
     }
   }, [canvas]);
@@ -423,22 +486,18 @@ function Editor() {
       // Fabric v5+ EraserBrush (non-destructive)
       const eraser = new fabric.EraserBrush(canvas);
       eraser.width = eraserSize;
-      // restore mode = عكس المسح
       eraser.inverted = !!isRestoreMode;
       canvas.freeDrawingBrush = eraser;
 
-      // تأكد إن العناصر قابلة للمسح
       canvas.getObjects().forEach((obj) => {
         obj.set({ erasable: true });
         if (obj._objects)
           obj._objects.forEach((sub) => sub.set({ erasable: true }));
       });
     } else {
-      // Fallback بسيط لو Fabric قديم
       canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
       canvas.freeDrawingBrush.width = eraserSize;
 
-      // تنبيه للمستخدم إن الممحاة الكاملة تحتاج Fabric v5
       toast(
         (t) => (
           <span>
@@ -448,7 +507,6 @@ function Editor() {
         { id: "fabric-eraser-warning" }
       );
 
-      // هنوقف الـ selection أثناء الرسم
       canvas.selection = false;
       canvas.forEachObject((o) => (o.selectable = false));
     }
@@ -460,7 +518,6 @@ function Editor() {
     if (!canvas) return;
     setActiveTool(null);
     canvas.isDrawingMode = false;
-    // رجّع الإعدادات الافتراضية
     canvas.selection = true;
     canvas.forEachObject(
       (o) => (o.selectable = o.selectable !== false ? true : o.selectable)
@@ -468,7 +525,6 @@ function Editor() {
     canvas.renderAll();
   };
 
-  // لو حجم الفرشة اتغيّر أثناء وضع المسح
   useEffect(() => {
     if (!canvas) return;
     if (activeTool === "erase" && canvas.freeDrawingBrush) {
@@ -747,13 +803,15 @@ function Editor() {
 
   const handleColorClick = (color) => {
     if (!canvas) return;
+
     const active = canvas.getActiveObject();
     if (active && active.set) {
       active.set("fill", color);
-      canvas.renderAll();
-    } else {
-      canvas.setBackgroundColor(color, () => canvas.renderAll());
+    } else if (canvas.fillRect) {
+      canvas.fillRect.set("fill", color);
     }
+
+    canvas.renderAll();
     saveCanvasState(canvas);
     persistCanvas(canvas);
   };
@@ -1332,7 +1390,6 @@ function Editor() {
 
                           setLayers(newLayers);
                           canvas.discardActiveObject();
-                          // Fabric عنده z-index: 0 هي أسفل شيء
                           newLayers
                             .slice()
                             .reverse()
@@ -1360,8 +1417,6 @@ function Editor() {
                             canvas.requestRenderAll();
                           }}
                         />
-
-                        
                       </div>
                     ))}
                   </div>
@@ -1375,8 +1430,6 @@ function Editor() {
     </div>
   );
 }
-
-
 
 export default Editor;
 

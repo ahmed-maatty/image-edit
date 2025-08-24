@@ -3175,8 +3175,6 @@ footer {
   height: fit-content;
   padding: 0;
   canvas {
-    background: url("/media/dottedimage.png") center center no-repeat;
-    background-color: #f8eefa;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 100% !important;
     height: 500px !important;
@@ -3281,6 +3279,18 @@ footer {
 }
 .discoverLinks2 {
   padding-top: 40px;
+  .upload-btn-editor {
+    label {
+      display: flex;
+      flex-direction: column;
+    }
+    gap: 0;
+    font-weight: 500;
+    img {
+      width: 90px;
+      height: 90px;
+    }
+  }
   a {
     flex-direction: column;
     gap: 0;
