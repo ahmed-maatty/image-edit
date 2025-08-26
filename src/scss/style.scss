@@ -2046,7 +2046,9 @@ footer {
     width: 100%;
     img {
       width: 100%;
-      border-radius: 12px;
+      object-fit: cover;
+      border-radius: 25px;
+      cursor: pointer;
       box-shadow: 0px 0px 8px 0px rgba(40, 12, 71, 0.25);
     }
   }

@@ -7,8 +7,10 @@ import { handleError } from "../../api/error";
 import { useNavigate } from "react-router-dom";
 import Loader from "../fragments/Loader";
 import GoTop from "../fragments/GoTop";
+import { useShowOption } from "../../hooks/ShowOptionProvider";
 
 function Backgrounds() {
+  const { nameBG, indexBG, countBG } = useShowOption();
   const { active, handleActive, handleSearch } = useDashboardNav();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,6 +20,18 @@ function Backgrounds() {
     count: 0,
     index: null,
   });
+  
+  console.log(category)
+
+  useEffect(() => {
+    if (nameBG && indexBG && countBG) {
+      setCategory({
+        name: nameBG,
+        count: countBG,
+        index: indexBG,
+      });
+    }
+  }, [nameBG, indexBG, countBG]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -145,8 +159,8 @@ function Backgrounds() {
                       key={index}
                       onClick={() => {
                         const imgUrl = `http://3rabapp.com/apps/assets/bg-thnumbail/cat${category.index}-${index}.png`;
-                        localStorage.setItem("BackGroundUrl",imgUrl)
-                        navigate("/editor")
+                        localStorage.setItem("BackGroundUrl", imgUrl);
+                        navigate("/editor");
                       }}
                     >
                       <img

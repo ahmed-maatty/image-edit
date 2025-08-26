@@ -4,8 +4,10 @@ import { useDashboardNav } from "../../hooks/DashboardNavHook";
 import { DashboardNav } from "../fragments/dashboard/DashboardNav";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
+import { useShowOption } from "../../hooks/ShowOptionProvider";
 
 function Dashboard() {
+  const {setCountBG ,setIndexBg,setNameBG} = useShowOption();
   const { active, handleActive, handleSearch } = useDashboardNav();
   const navigate = useNavigate();
   const handleFileUpload = (e) => {
@@ -23,6 +25,13 @@ function Dashboard() {
     e.target.value = "";
     navigate("/editor");
   };
+
+  const clickSliderHandler = (count , index , name) => {
+    setCountBG(count);
+    setIndexBg(index);
+    setNameBG(name);
+    navigate('/backgrounds')
+  }
 
   return (
     <div className={active ? "dashborad active" : "dashborad"}>
@@ -69,14 +78,19 @@ function Dashboard() {
                 </SwiperSlide>
               ))}  */}
 
-            <SwiperSlide>
+            <SwiperSlide
+              onClick={() => clickSliderHandler(65 , 96 ,"Happy New Year")}
+            >
               <img src="/media/banner.png" alt="" />
             </SwiperSlide>
-            <SwiperSlide>
-              <img src="/media/banner.png" alt="" />
+            <SwiperSlide onClick={() => clickSliderHandler(44 , 9 ,"Greeting")}>
+              <img src="/media/banner2.png" alt="" />
             </SwiperSlide>
-            <SwiperSlide>
-              <img src="/media/banner.png" alt="" />
+            <SwiperSlide onClick={() => clickSliderHandler(208 , 49 ,"winter backgrounds")}>
+              <img src="/media/banner3.png" alt="" />
+            </SwiperSlide>
+            <SwiperSlide onClick={() => clickSliderHandler(229 , 18 , "Weddings")}>
+              <img src="/media/banner4.png" alt="" />
             </SwiperSlide>
           </Swiper>
         </div>
