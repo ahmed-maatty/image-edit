@@ -54,10 +54,10 @@ function AuthOptions({ setOption }) {
     if (!window.fbAsyncInit) {
       window.fbAsyncInit = function () {
         window.FB.init({
-          appId: "1460753841607323",
+          appId: "599678379745870",
           cookie: true,
           xfbml: true,
-          version: "v19.0", // Must be a valid version string
+          version: "v23.0", // Must be a valid version string
           autoLogAppEvents: true,
         });
         console.log("Facebook SDK initialized");
