@@ -19,7 +19,7 @@ function AuthOptions({ setOption }) {
     if (window.google) {
       tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id:
-          "493420191440-elm44i8nn0vieu4nkrabe9o98folk1nv.apps.googleusercontent.com",
+          "165272386548-8ervo4je9f2qe3tdhqrukcdu05u4lole.apps.googleusercontent.com",
         scope:
           "openid profile email https://www.googleapis.com/auth/userinfo.email",
         callback: async (tokenResponse) => {
@@ -43,7 +43,7 @@ function AuthOptions({ setOption }) {
                 token: `Bearer ${accessToken}`,
                 social_media_site: "google",
                 email: userInfo.email,
-                is_social: "true",
+                is_social: "True",
               },
               "google"
             );
@@ -57,7 +57,7 @@ function AuthOptions({ setOption }) {
     if (!window.fbAsyncInit) {
       window.fbAsyncInit = function () {
         window.FB.init({
-          appId: "1234020597087735",
+          appId: "1460753841607323",
           cookie: true,
           xfbml: true,
           version: "v19.0", // Must be a valid version string
@@ -118,9 +118,10 @@ function AuthOptions({ setOption }) {
   };
 
   const handleSocialLogin = async (payload, provider) => {
+    console.log(`login paylaod ${JSON.stringify(payload)}`);
     setLoading((prev) => ({ ...prev, [provider]: true }));
     try {
-      console.log(payload);
+      console.log(`login paylaod ${payload}`);
       const res = await AxiosInstance.post("/login-social", payload);
       Cookies.set("token", res?.data?.token);
       Cookies.set("username", res?.data?.name);
