@@ -34,9 +34,6 @@ function AuthOptions({ setOption }) {
                 },
               }
             ).then((res) => res.json());
-
-            console.log("Google User Info:", userInfo);
-
             await handleSocialLogin(
               {
                 username: userInfo.name,
@@ -118,10 +115,8 @@ function AuthOptions({ setOption }) {
   };
 
   const handleSocialLogin = async (payload, provider) => {
-    console.log(`login paylaod ${JSON.stringify(payload)}`);
     setLoading((prev) => ({ ...prev, [provider]: true }));
     try {
-      console.log(`login paylaod ${payload}`);
       const res = await AxiosInstance.post("/login-social", payload);
       Cookies.set("token", res?.data?.token);
       Cookies.set("username", res?.data?.name);
