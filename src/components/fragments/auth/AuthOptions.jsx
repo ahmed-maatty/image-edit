@@ -24,7 +24,6 @@ function AuthOptions({ setOption }) {
           "openid profile email https://www.googleapis.com/auth/userinfo.email",
         callback: async (tokenResponse) => {
           const accessToken = tokenResponse.access_token;
-          console.log(accessToken);
           if (accessToken) {
             const userInfo = await fetch(
               "https://www.googleapis.com/oauth2/v3/userinfo",
@@ -34,6 +33,8 @@ function AuthOptions({ setOption }) {
                 },
               }
             ).then((res) => res.json());
+            Cookies.set("token", `Bearer ${accessToken}`);
+            Cookies.set("username", userInfo.name);
             await handleSocialLogin(
               {
                 username: userInfo.name,
@@ -98,10 +99,21 @@ function AuthOptions({ setOption }) {
           if (loginResponse.authResponse) {
             console.log("Welcome! Fetching your information....");
             window.FB.api("/me", { fields: "name,email" }, (userResponse) => {
-              console.log("Good to see you, " + userResponse.name);
+              console.log(JSON.stringify(userResponse));
               // Send to your backend
+              Cookies.set(
+                "token",
+                `Bearer ${loginResponse.authResponse.accessToken}`
+              );
+              Cookies.set("username", userResponse.name);
               handleSocialLogin(
-                loginResponse.authResponse.accessToken,
+                {
+                  username: userResponse.name,
+                  token: `Bearer ${loginResponse.authResponse.accessToken}`,
+                  social_media_site: loginResponse.authResponse.graphDomain,
+                  email: userResponse.email,
+                  is_social: "True",
+                },
                 "facebook"
               );
             });
@@ -116,10 +128,9 @@ function AuthOptions({ setOption }) {
 
   const handleSocialLogin = async (payload, provider) => {
     setLoading((prev) => ({ ...prev, [provider]: true }));
+    console.log(payload);
     try {
-      const res = await AxiosInstance.post("/login-social", payload);
-      Cookies.set("token", res?.data?.token);
-      Cookies.set("username", res?.data?.name);
+      await AxiosInstance.post("/login-social", payload);
       navigate("/dashboard");
     } catch (error) {
       console.error(
@@ -135,44 +146,42 @@ function AuthOptions({ setOption }) {
     tokenClient?.requestAccessToken();
   };
 
-  const handleTwitterLogin = () => {
-    window.open(
-      `/auth/twitter?redirect=${encodeURIComponent(window.location.href)}`,
-      "_blank"
-    );
+  const handleXLogin = () => {
+    setLoading((prev) => ({ ...prev, x: true }));
+
+    const CLIENT_ID = "ZGdhMWdrS0dMSDN4RExzYXV6WDI6MTpjaQ";
+    const REDIRECT_URI = "http://localhost:5173/"; // URI مسجّل في X
+    const SCOPE = "tweet.read users.read offline.access";
+    const STATE = Math.random().toString(36).substring(2, 15); // random string
+    const CODE_CHALLENGE_METHOD = "plain";
+    const CODE_CHALLENGE = Math.random().toString(36).substring(2, 15);
+
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: CLIENT_ID,
+      redirect_uri: REDIRECT_URI,
+      scope: SCOPE,
+      state: STATE,
+      code_challenge: CODE_CHALLENGE,
+      code_challenge_method: CODE_CHALLENGE_METHOD,
+    });
+
+    window.location.href = `https://twitter.com/i/oauth2/authorize?${params.toString()}`;
   };
 
-  // Handle Twitter callback
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const oauthToken = params.get("oauth_token");
-    const oauthVerifier = params.get("oauth_verifier");
+    const code = params.get("code");
 
-    if (oauthToken && oauthVerifier) {
-      handleTwitterCallback(oauthToken, oauthVerifier);
-    }
+    if (!code) return;
+    console.log(code);
+    handleSocialLogin(
+      {
+        code,
+      },
+      "X"
+    );
   }, []);
-
-  const handleTwitterCallback = async (oauthToken, oauthVerifier) => {
-    setLoading((prev) => ({ ...prev, twitter: true }));
-    try {
-      const res = await AxiosInstance.post("/auth/twitter/callback", {
-        oauth_token: oauthToken,
-        oauth_verifier: oauthVerifier,
-      });
-
-      Cookies.set("token", res.data.token);
-      Cookies.set("username", res.data.name);
-      navigate("/");
-    } catch (error) {
-      console.error(
-        "Twitter login failed",
-        error.response?.data || error.message
-      );
-    } finally {
-      setLoading((prev) => ({ ...prev, twitter: false }));
-    }
-  };
 
   return (
     <div className="wayBtns">
@@ -204,7 +213,7 @@ function AuthOptions({ setOption }) {
           </button>
 
           {/* Twitter Button */}
-          <button onClick={handleTwitterLogin} disabled={loading.twitter}>
+          <button onClick={handleXLogin} disabled={loading.twitter}>
             <img src="/media/social-icons/twitter.svg" alt="Twitter" />
             Continue with Twitter
             {loading.twitter && <span className="loader"></span>}

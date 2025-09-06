@@ -1,12 +1,71 @@
 import { Field, Form, Formik } from "formik";
 import { Link } from "react-router-dom";
+import Cookies from "js-cookie";
 
 export function DashboardNav({
   handleActive,
   handleSearch,
   type,
   downloadImage,
+  isProfile,
+  EditeProfile,
 }) {
+  const username = Cookies.get("username");
+
+  if (isProfile) {
+    if (EditeProfile) {
+      return (
+        <div className="dashboardNav profileNavBar">
+          <div className="dnBtns">
+            <button className=" menu2" onClick={handleActive}>
+              <Menu />
+            </button>
+            <Link className="gopro" to={"##"}>
+              <Pro />
+              Go pro
+            </Link>
+          </div>
+          <div className="profile_nav_userDiv">
+            <div className="profile_projects_div">
+              <div className="profile_projects_imgs">
+                <img src="/media/projects.png" alt="" />
+                projects
+              </div>
+              <p>25</p>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="dashboardNav profileNavBar">
+          <div className="dnBtns">
+            <button className=" menu2" onClick={handleActive}>
+              <Menu />
+            </button>
+            <Link className="gopro" to={"##"}>
+              <Pro />
+              Go pro
+            </Link>
+          </div>
+          <div className="profile_nav_userDiv">
+            <div className="avatar">
+              <img src="/media/avatar.png" alt="" />
+              {username}
+            </div>
+            <div className="profile_projects_div">
+              <div className="profile_projects_imgs">
+                <img src="/media/projects.png" alt="" />
+                projects
+              </div>
+              <p>25</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  }
+
   return (
     <div className="dashboardNav">
       <div className="dnBtns">
@@ -76,10 +135,10 @@ export function DashboardNav({
           </button>
         </div>
       )}
-      <div className="avatar">
+      <Link className="avatar" to={"/profile"}>
         <img src="/media/avatar.png" alt="" />
-        User name
-      </div>
+        {username}
+      </Link>
     </div>
   );
 }

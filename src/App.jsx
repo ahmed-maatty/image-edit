@@ -19,6 +19,8 @@ import Learn from "./components/pages/landing/Learn";
 import LearnTutorial from "./components/pages/landing/LearnTutorial";
 import BlogPost from "./components/pages/landing/BlogPost";
 import BgRemover from "./components/pages/BgRemover";
+import Profile from "./components/pages/Profile";
+import EditeProfile from "./components/pages/EditeProfile";
 
 function App() {
   return (
@@ -60,6 +62,14 @@ function App() {
           <Route
             path="/up-scale"
             element={<ProtectedRoute component={UpScale} />}
+          />
+          <Route
+            path="/profile"
+            element={<ProtectedRoute component={Profile} />}
+          />
+          <Route
+            path="/edite-profile"
+            element={<ProtectedRoute component={EditeProfile} />}
           />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
