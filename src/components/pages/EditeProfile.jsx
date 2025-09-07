@@ -7,19 +7,21 @@ import Cookies from "js-cookie";
 function EditeProfile() {
   const { active, handleActive } = useDashboardNav();
   const [user, setUser] = useState(null);
-  const getUserInfo = async () => {
+  const token = Cookies.get("token")
+  const getUserInfo = async (token) => {
     const res = await AxiosInstance.get("/member-info", {
       headers: {
-        Authorization: Cookies.get("token"),
+        Authorization: `Bearer ${token}`,
       },
     });
-    console.log(res);
-    console.log(Cookies.get("token"))
+    setUser(res?.data?.data);
   };
 
   useEffect(() => {
-    getUserInfo()
+    getUserInfo(token)
   }, []);
+
+  console.log(user)
 
   return (
     <div
@@ -45,7 +47,7 @@ function EditeProfile() {
                 <div className="layer"></div>
               </label>
               <input type="file" name="file" id="file" />
-              <img src="/media/avatar.png" alt="" />
+              <img src={user?.profile_image} alt="user Avatar" />
             </div>
           </div>
           <div className="user_data">
@@ -53,14 +55,14 @@ function EditeProfile() {
               <p>Profile details</p>
               <div>
                 <label htmlFor="">Name</label>
-                <input type="text" placeholder="write your name" value={""} />
+                <input type="text" placeholder="write your name" value={user?.user?.first_name} />
               </div>
               <div>
                 <label htmlFor="">User name</label>
                 <input
                   type="text"
                   placeholder="write your username"
-                  value={"Ahmedibrahim"}
+                  value={user?.user?.username}
                 />
               </div>
               <div>
@@ -68,17 +70,17 @@ function EditeProfile() {
                 <input
                   type="text"
                   placeholder="write your email"
-                  value={"My mail@mail.com"}
+                  value={user?.user?.email}
                 />
               </div>
               <div>
                 <label htmlFor="">Phone</label>
-                <input type="text" placeholder="write your phone" value={""} />
+                <input type="text" placeholder="write your phone" value={user?.mobile} />
               </div>
               <div>
                 <label htmlFor="">Gender</label>
                 <select name="" id="">
-                  <option value="">Choose your gender</option>
+                  <option value="">{user?.gender || "Choose your gender"}</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>

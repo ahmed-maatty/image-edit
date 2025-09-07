@@ -152,8 +152,8 @@ export function DashboardNav({
         </div>
       )}
       <Link className="avatar" to={"/profile"}>
-        <img src="/media/avatar.png" alt="" />
-        {username}
+        <img src={user.profile_image} alt="" />
+        {user?.user.username}
       </Link>
     </div>
   );
