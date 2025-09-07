@@ -12,22 +12,24 @@ export const useAuthHandlers = () => {
   const handleSubmit = async (values, resetForm, route, setShow, goTo) => {
     setIsLoading(true);
     try {
-      const res = await AxiosInstance.post(route, values);
-      toast.success(res.data.message);
+      const {data} = await AxiosInstance.post(route, values);
+      toast.success(data.message);
       if (route === "login") {
-        Cookies.set("token", res.data.token);
+        Cookies.set("token", data.data.token);
+        Cookies.set("username", data.data.user.username);
       }
       resetForm();
 
       if (goTo) {
+        navigate(goTo);
         setTimeout(() => {
-          navigate(goTo);
         }, 1500);
       }
       setTimeout(() => {
         setShow(false);
       }, 1500);
     } catch (error) {
+      console.log(error)
       handleError(error);
     } finally {
       setIsLoading(false);

@@ -33,8 +33,9 @@ function AuthOptions({ setOption }) {
                 },
               }
             ).then((res) => res.json());
-            Cookies.set("token", `Bearer ${accessToken}`);
+            Cookies.set("token", accessToken);
             Cookies.set("username", userInfo.name);
+
             await handleSocialLogin(
               {
                 username: userInfo.name,
@@ -101,10 +102,7 @@ function AuthOptions({ setOption }) {
             window.FB.api("/me", { fields: "name,email" }, (userResponse) => {
               console.log(JSON.stringify(userResponse));
               // Send to your backend
-              Cookies.set(
-                "token",
-                `Bearer ${loginResponse.authResponse.accessToken}`
-              );
+              Cookies.set("token", loginResponse.authResponse.accessToken);
               Cookies.set("username", userResponse.name);
               handleSocialLogin(
                 {

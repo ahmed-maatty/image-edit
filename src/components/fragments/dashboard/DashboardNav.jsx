@@ -1,6 +1,8 @@
 import { Field, Form, Formik } from "formik";
 import { Link } from "react-router-dom";
 import Cookies from "js-cookie";
+import { useEffect, useState } from "react";
+import { AxiosInstance } from "../../../api/axios";
 
 export function DashboardNav({
   handleActive,
@@ -10,7 +12,21 @@ export function DashboardNav({
   isProfile,
   EditeProfile,
 }) {
-  const username = Cookies.get("username");
+
+  const [user, setUser] = useState(null);
+  const token = Cookies.get("token");
+  const getUser = async (token) => {
+    const res = await AxiosInstance.get("/member-info", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setUser(res.data.data);
+
+  };
+
+  useEffect(() => {
+    getUser(token);
+  }, []);
+
 
   if (isProfile) {
     if (EditeProfile) {
@@ -50,8 +66,8 @@ export function DashboardNav({
           </div>
           <div className="profile_nav_userDiv">
             <div className="avatar">
-              <img src="/media/avatar.png" alt="" />
-              {username}
+              <img src={user?.profile_image} alt="user avatar" />
+              {user?.user.username}
             </div>
             <div className="profile_projects_div">
               <div className="profile_projects_imgs">

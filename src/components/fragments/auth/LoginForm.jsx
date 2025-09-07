@@ -7,9 +7,8 @@ import { Arrow, Eye, EyeSlash, Info } from "./icons/AuthIcons";
 
 function LoginForm({ setOption, setShow }) {
   const validation = Yup.object().shape({
-    email: Yup.string()
-      .email("Invalid email address")
-      .required("Email is required"),
+    username: Yup.string()
+      .required("username is required"),
     password: Yup.string()
       .required("Password is required")
       .min(8, "Password must be at least 8 characters")
