@@ -152,7 +152,7 @@ export function DashboardNav({
         </div>
       )}
       <Link className="avatar" to={"/profile"}>
-        <img src={user.profile_image} alt="" />
+        <img src={user?.profile_image} alt="" />
         {user?.user.username}
       </Link>
     </div>
