@@ -33,9 +33,6 @@ function AuthOptions({ setOption }) {
                 },
               }
             ).then((res) => res.json());
-            Cookies.set("token", accessToken);
-            Cookies.set("username", userInfo.name);
-
             await handleSocialLogin(
               {
                 username: userInfo.name,
@@ -101,9 +98,6 @@ function AuthOptions({ setOption }) {
             console.log("Welcome! Fetching your information....");
             window.FB.api("/me", { fields: "name,email" }, (userResponse) => {
               console.log(JSON.stringify(userResponse));
-              // Send to your backend
-              Cookies.set("token", loginResponse.authResponse.accessToken);
-              Cookies.set("username", userResponse.name);
               handleSocialLogin(
                 {
                   username: userResponse.name,
@@ -127,6 +121,13 @@ function AuthOptions({ setOption }) {
   const handleSocialLogin = async (payload, provider) => {
     setLoading((prev) => ({ ...prev, [provider]: true }));
     console.log(payload);
+    const token = payload.token.split(" ")[1];
+    Cookies.set("token", token, { path: "/", secure: false, sameSite: "Lax" });
+    Cookies.set("username", payload.username, {
+      path: "/",
+      secure: false,
+      sameSite: "Lax",
+    });
     try {
       await AxiosInstance.post("/login-social", payload);
       navigate("/dashboard");
