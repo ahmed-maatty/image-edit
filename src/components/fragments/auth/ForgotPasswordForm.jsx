@@ -29,7 +29,7 @@ function ForgotPasswordForm({setOption,setShow}) {
         <Formik
           initialValues={{ email: "" }}
           onSubmit={(values, { resetForm }) => {
-            handleSubmit(values, resetForm, "forget-password", setShow);
+            handleSubmit(values, resetForm, "forget-password", setShow );
           }}
           validationSchema={validation}
         >

@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Aside from "../fragments/dashboard/Aside";
 import { useDashboardNav } from "../../hooks/DashboardNavHook";
 import { DashboardNav } from "../fragments/dashboard/DashboardNav";
@@ -793,12 +793,15 @@ function Editor() {
   };
 
   // ===== sidebars & buttons =====
+  const navigate = useNavigate()
   const [activeButton, setActiveButton] = useState(null);
 
   const handleButtonClick = (buttonName) => {
     setActiveButton((prev) => (prev === buttonName ? null : buttonName));
     if (activeTool === "erase") stopErasing();
     if (buttonName === "Background") setActiveTool(null);
+    if(buttonName === "Image Generator") navigate("/generate")
+    if(buttonName ===  "Background") navigate("/backgrounds")
   };
 
   const handleColorClick = (color) => {
@@ -1121,7 +1124,7 @@ function Editor() {
               ))}
             </div>
 
-            {activeButton === "Background" && activeTool === null && (
+            {activeButton === "Album" && activeTool === null && (
               <BackroundSide
                 fileInputRef={fileInputRef}
                 handleFileUpload={handleFileUpload}

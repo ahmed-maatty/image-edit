@@ -8,7 +8,7 @@ function Aside() {
       </Link>
       {/* <h2>Let’s get creative</h2> */}
       <div className="Create w100">
-        <Link className="plus" to={"##"}>
+        <Link className="plus" to={"/editor"}>
           <Plus />
         </Link>
         Create
@@ -21,26 +21,26 @@ function Aside() {
           </Link>
         </li>
         <li>
-          <Link to={"##"}>
+          <Link to={"/learn/tutorial"} target="_blank">
             <Youtube />
             YT tutorial
           </Link>
         </li>
         <li>
-          <Link to={"##"}>
+          <Link to={"/pricing"} target="_blank" >
             {" "}
             <Dollar />
             Purchasing
           </Link>
         </li>
         <li>
-          <Link to={"##"}>
+          <Link to={"##"} target="_blank">
             <Fonts />
             Free fonts
           </Link>
         </li>
         <li>
-          <Link to={"##"}>
+          <Link to={"https://wa.me/201140082857"} target="_blank">
             <Whatsapp />
             Whatsapp
           </Link>
